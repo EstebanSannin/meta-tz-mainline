@@ -7,6 +7,7 @@ LINUX_REPO = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 # The preamble and SPI patches carried for 6.18 are all upstream in 7.3.
 TDX_PATCHES = " \
     file://0001-thermal-imx-Update-critical-temp-threshold.patch \
+    file://iptables-legacy.cfg \
 "
 
 PV = "7.3"
