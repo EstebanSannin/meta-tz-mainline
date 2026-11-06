@@ -1,0 +1,66 @@
+From b1439a4d275b08e5d91f37fb2850b54ecea33ed9 Mon Sep 17 00:00:00 2001
+From: Paul Kocialkowski <paulk@sys-base.io>
+Date: Fri, 22 May 2026 12:16:48 +0200
+Subject: [PATCH 09/15] media: verisilicon: Cancel job with runtime pm put/clk
+ disable on failure
+
+The no-pm variant of hantro_job_finish is only good to use directly if
+runtime pm get failed. In other cases, we need to do a runtime pm put
+and bulk clk disable to correctly undo what was set up.
+
+Fixes: 892bb6ecead9 ("media: hantro: do a PM resume earlier")
+Signed-off-by: Paul Kocialkowski <paulk@sys-base.io>
+Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2565125-1-paulk@sys-base.io/]
+---
+ .../media/platform/verisilicon/hantro_drv.c   | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/media/platform/verisilicon/hantro_drv.c b/drivers/media/platform/verisilicon/hantro_drv.c
+index ad71c0402ef3..7070f99f29f8 100644
+--- a/drivers/media/platform/verisilicon/hantro_drv.c
++++ b/drivers/media/platform/verisilicon/hantro_drv.c
+@@ -170,29 +170,34 @@ void hantro_end_prepare_run(struct hantro_ctx *ctx)
+ static void device_run(void *priv)
+ {
+ 	struct hantro_ctx *ctx = priv;
++	struct hantro_dev *vpu = ctx->dev;
+ 	struct vb2_v4l2_buffer *src, *dst;
+ 	int ret;
+ 
+ 	src = hantro_get_src_buf(ctx);
+ 	dst = hantro_get_dst_buf(ctx);
+ 
+-	ret = pm_runtime_resume_and_get(ctx->dev->dev);
++	ret = pm_runtime_resume_and_get(vpu->dev);
+ 	if (ret < 0)
+-		goto err_cancel_job;
++		goto err_cancel_job_no_pm;
+ 
+-	ret = clk_bulk_enable(ctx->dev->variant->num_clocks, ctx->dev->clocks);
++	ret = clk_bulk_enable(vpu->variant->num_clocks, vpu->clocks);
+ 	if (ret)
+-		goto err_cancel_job;
++		goto err_cancel_job_pm;
+ 
+ 	v4l2_m2m_buf_copy_metadata(src, dst);
+ 
+ 	if (ctx->codec_ops->run(ctx))
+-		goto err_cancel_job;
++		goto err_cancel_job_clk;
+ 
+ 	return;
+ 
+-err_cancel_job:
+-	hantro_job_finish_no_pm(ctx->dev, ctx, VB2_BUF_STATE_ERROR);
++err_cancel_job_clk:
++	clk_bulk_disable(vpu->variant->num_clocks, vpu->clocks);
++err_cancel_job_pm:
++	pm_runtime_put_autosuspend(vpu->dev);
++err_cancel_job_no_pm:
++	hantro_job_finish_no_pm(vpu, ctx, VB2_BUF_STATE_ERROR);
+ }
+ 
+ static const struct v4l2_m2m_ops vpu_m2m_ops = {
+-- 
+2.43.0
+
