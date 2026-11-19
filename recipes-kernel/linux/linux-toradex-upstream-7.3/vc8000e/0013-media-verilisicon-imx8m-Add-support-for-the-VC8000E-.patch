@@ -1,0 +1,188 @@
+From c13959c7c7c54f5851c1a308347e65bc250f4797 Mon Sep 17 00:00:00 2001
+From: Paul Kocialkowski <paulk@sys-base.io>
+Date: Fri, 22 May 2026 12:16:52 +0200
+Subject: [PATCH 13/15] media: verilisicon: imx8m: Add support for the VC8000E
+ on i.MX8MP
+
+Add the required platform-specific bits for driving the VC8000E found
+on the NXP i.MX8MP SoC.
+
+Signed-off-by: Paul Kocialkowski <paulk@sys-base.io>
+Signed-off-by: Marco Felsch <m.felsch@pengutronix.de>
+Co-authored-by: Marco Felsch <m.felsch@pengutronix.de>
+Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2565125-1-paulk@sys-base.io/]
+---
+ .../media/platform/verisilicon/hantro_drv.c   |   1 +
+ .../media/platform/verisilicon/hantro_hw.h    |   1 +
+ .../media/platform/verisilicon/imx8m_vpu_hw.c | 113 ++++++++++++++++++
+ 3 files changed, 115 insertions(+)
+
+diff --git a/drivers/media/platform/verisilicon/hantro_drv.c b/drivers/media/platform/verisilicon/hantro_drv.c
+index 3dedc5c779f1..983b2ff335ac 100644
+--- a/drivers/media/platform/verisilicon/hantro_drv.c
++++ b/drivers/media/platform/verisilicon/hantro_drv.c
+@@ -875,6 +875,7 @@ static const struct of_device_id of_hantro_match[] = {
+ #endif
+ #ifdef CONFIG_VIDEO_HANTRO_IMX8M
+ 	{ .compatible = "nxp,imx8mm-vpu-g1", .data = &imx8mm_vpu_g1_variant, },
++	{ .compatible = "nxp,imx8mp-vpu-vc8000e", .data = &imx8mp_vpu_vc8000e_variant, },
+ 	{ .compatible = "nxp,imx8mq-vpu", .data = &imx8mq_vpu_variant, },
+ 	{ .compatible = "nxp,imx8mq-vpu-g1", .data = &imx8mq_vpu_g1_variant },
+ 	{ .compatible = "nxp,imx8mq-vpu-g2", .data = &imx8mq_vpu_g2_variant },
+diff --git a/drivers/media/platform/verisilicon/hantro_hw.h b/drivers/media/platform/verisilicon/hantro_hw.h
+index e45b13d00456..5f3f6f15fb79 100644
+--- a/drivers/media/platform/verisilicon/hantro_hw.h
++++ b/drivers/media/platform/verisilicon/hantro_hw.h
+@@ -420,6 +420,7 @@ enum hantro_enc_fmt {
+ 	ROCKCHIP_VPU_ENC_FMT_UYVY422 = 3,
+ };
+ 
++extern const struct hantro_variant imx8mp_vpu_vc8000e_variant;
+ extern const struct hantro_variant imx8mm_vpu_g1_variant;
+ extern const struct hantro_variant imx8mq_vpu_g1_variant;
+ extern const struct hantro_variant imx8mq_vpu_g2_variant;
+diff --git a/drivers/media/platform/verisilicon/imx8m_vpu_hw.c b/drivers/media/platform/verisilicon/imx8m_vpu_hw.c
+index fa4224de4b99..7c84b09f04f2 100644
+--- a/drivers/media/platform/verisilicon/imx8m_vpu_hw.c
++++ b/drivers/media/platform/verisilicon/imx8m_vpu_hw.c
+@@ -234,6 +234,96 @@ static const struct hantro_fmt imx8m_vpu_g2_dec_fmts[] = {
+ 	},
+ };
+ 
++static const struct hantro_fmt imx8mp_vc8000e_fmts[] = {
++	{
++		.fourcc = V4L2_PIX_FMT_YUV420M,
++		.codec_mode = HANTRO_MODE_NONE,
++		.enc_fmt = ROCKCHIP_VPU_ENC_FMT_YUV420P,
++		.frmsize = {
++			.min_width = FMT_MIN_WIDTH,
++			.max_width = FMT_FHD_WIDTH,
++			.step_width = MB_DIM,
++			.min_height = FMT_MIN_HEIGHT,
++			.max_height = FMT_FHD_HEIGHT,
++			/* TODO: implement dummy reads to relax size restrictions */
++			.step_height = 64,
++		},
++	}, {
++		.fourcc = V4L2_PIX_FMT_YUV420,
++		.codec_mode = HANTRO_MODE_NONE,
++		.enc_fmt = ROCKCHIP_VPU_ENC_FMT_YUV420P,
++		.frmsize = {
++			.min_width = FMT_MIN_WIDTH,
++			.max_width = FMT_FHD_WIDTH,
++			.step_width = MB_DIM,
++			.min_height = FMT_MIN_HEIGHT,
++			.max_height = FMT_FHD_HEIGHT,
++			/* TODO: implement dummy reads to relax size restrictions */
++			.step_height = 64,
++		},
++	}, {
++		.fourcc = V4L2_PIX_FMT_NV12M,
++		.codec_mode = HANTRO_MODE_NONE,
++		.enc_fmt = ROCKCHIP_VPU_ENC_FMT_YUV420SP,
++		.frmsize = {
++			.min_width = FMT_MIN_WIDTH,
++			.max_width = FMT_FHD_WIDTH,
++			.step_width = MB_DIM,
++			.min_height = FMT_MIN_HEIGHT,
++			.max_height = FMT_FHD_HEIGHT,
++			.step_height = MB_DIM,
++		},
++	}, {
++		.fourcc = V4L2_PIX_FMT_NV12,
++		.codec_mode = HANTRO_MODE_NONE,
++		.enc_fmt = ROCKCHIP_VPU_ENC_FMT_YUV420SP,
++		.frmsize = {
++			.min_width = FMT_MIN_WIDTH,
++			.max_width = FMT_FHD_WIDTH,
++			.step_width = MB_DIM,
++			.min_height = FMT_MIN_HEIGHT,
++			.max_height = FMT_FHD_HEIGHT,
++			.step_height = MB_DIM,
++		},
++	}, {
++		.fourcc = V4L2_PIX_FMT_YUYV,
++		.codec_mode = HANTRO_MODE_NONE,
++		.enc_fmt = ROCKCHIP_VPU_ENC_FMT_YUYV422,
++		.frmsize = {
++			.min_width = FMT_MIN_WIDTH,
++			.max_width = FMT_FHD_WIDTH,
++			.step_width = MB_DIM,
++			.min_height = FMT_MIN_HEIGHT,
++			.max_height = FMT_FHD_HEIGHT,
++			.step_height = MB_DIM,
++		},
++	}, {
++		.fourcc = V4L2_PIX_FMT_UYVY,
++		.codec_mode = HANTRO_MODE_NONE,
++		.enc_fmt = ROCKCHIP_VPU_ENC_FMT_UYVY422,
++		.frmsize = {
++			.min_width = FMT_MIN_WIDTH,
++			.max_width = FMT_FHD_WIDTH,
++			.step_width = MB_DIM,
++			.min_height = FMT_MIN_HEIGHT,
++			.max_height = FMT_FHD_HEIGHT,
++			.step_height = MB_DIM,
++		},
++	}, {
++		.fourcc = V4L2_PIX_FMT_H264_SLICE,
++		.codec_mode = HANTRO_MODE_H264_ENC,
++		.max_depth = 2,
++		.frmsize = {
++			.min_width = FMT_MIN_WIDTH,
++			.max_width = FMT_FHD_WIDTH,
++			.step_width = MB_DIM,
++			.min_height = FMT_MIN_HEIGHT,
++			.max_height = FMT_FHD_HEIGHT,
++			.step_height = MB_DIM,
++		},
++	},
++};
++
+ static int imx8mq_vpu_hw_init(struct hantro_dev *vpu)
+ {
+ 	vpu->ctrl_base = vpu->reg_bases[vpu->variant->num_regs - 1];
+@@ -307,6 +397,15 @@ static const struct hantro_codec_ops imx8mq_vpu_g2_codec_ops[] = {
+ 	},
+ };
+ 
++static const struct hantro_codec_ops imx8mp_vpu_vc8000e_codec_ops[] = {
++	[HANTRO_MODE_H264_ENC] = {
++		.run = hantro_vc8000e_h264_enc_run,
++		.done = hantro_vc8000e_h264_enc_done,
++		.init = hantro_vc8000e_h264_enc_init,
++		.exit = hantro_vc8000e_h264_enc_exit,
++	},
++};
++
+ /*
+  * VPU variants.
+  */
+@@ -319,6 +418,10 @@ static const struct hantro_irq imx8mq_g2_irqs[] = {
+ 	{ "g2", hantro_g2_irq },
+ };
+ 
++static const struct hantro_irq imx8mp_vc8000e_irqs[] = {
++	{ "vc8000e", hantro_vc8000e_irq },
++};
++
+ static const char * const imx8mq_clk_names[] = { "g1", "g2", "bus" };
+ static const char * const imx8mq_reg_names[] = { "g1", "g2", "ctrl" };
+ static const char * const imx8mq_g1_clk_names[] = { "g1" };
+@@ -392,3 +495,13 @@ const struct hantro_variant imx8mm_vpu_g1_variant = {
+ 	.clk_names = imx8mq_g1_clk_names,
+ 	.num_clocks = ARRAY_SIZE(imx8mq_g1_clk_names),
+ };
++
++const struct hantro_variant imx8mp_vpu_vc8000e_variant = {
++	.enc_fmts = imx8mp_vc8000e_fmts,
++	.num_enc_fmts = ARRAY_SIZE(imx8mp_vc8000e_fmts),
++	.codec = HANTRO_H264_ENCODER,
++	.codec_ops = imx8mp_vpu_vc8000e_codec_ops,
++	.irqs = imx8mp_vc8000e_irqs,
++	.num_irqs = ARRAY_SIZE(imx8mp_vc8000e_irqs),
++	.num_clocks = 1,
++};
+-- 
+2.43.0
+

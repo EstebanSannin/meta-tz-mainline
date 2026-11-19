@@ -1,0 +1,31 @@
+From 532cb7ef00b4780593d05ebe4a4e8644f86ed52d Mon Sep 17 00:00:00 2001
+From: Stefano Viola <stefano.viola@toradex.com>
+Date: Wed, 4 Nov 2026 13:02:13 +0100
+Subject: [PATCH 15/16] local: fix v4l2-core Makefile after applying the series
+ on 7.3.1
+
+Applying the series on 7.3.1 leaves two stale obj-$(CONFIG_V4L2_H264_ENC)
+lines from its earlier patches next to the final one. Drop them.
+
+Upstream-Status: Inappropriate [fix-up for rebasing the series on 7.3.1]
+Signed-off-by: Stefano Viola <stefano.viola@toradex.com>
+---
+ drivers/media/v4l2-core/Makefile | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/media/v4l2-core/Makefile b/drivers/media/v4l2-core/Makefile
+index 69fc457523..140d1596b3 100644
+--- a/drivers/media/v4l2-core/Makefile
++++ b/drivers/media/v4l2-core/Makefile
+@@ -30,8 +30,6 @@ obj-$(CONFIG_V4L2_FLASH_LED_CLASS) += v4l2-flash-led-class.o
+ obj-$(CONFIG_V4L2_FWNODE) += v4l2-fwnode.o
+ obj-$(CONFIG_V4L2_H264) += v4l2-h264.o
+ obj-$(CONFIG_V4L2_ISP) += v4l2-isp.o
+-obj-$(CONFIG_V4L2_H264_ENC) += v4l2-h264-enc.o
+-obj-$(CONFIG_V4L2_H264_ENC) += v4l2-h264-enc.o v4l2-h264-enc-rbsp.o
+ obj-$(CONFIG_V4L2_H264_ENC) += v4l2-h264-enc.o v4l2-h264-enc-rbsp.o \
+ 			       v4l2-h264-enc-rc.o
+ obj-$(CONFIG_V4L2_JPEG_HELPER) += v4l2-jpeg.o
+-- 
+2.43.0
+
