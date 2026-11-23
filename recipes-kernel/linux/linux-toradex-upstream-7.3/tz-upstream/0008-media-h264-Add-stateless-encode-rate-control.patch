@@ -1,7 +1,7 @@
-From 92f52ad5c58cb827fab7f653a4548b130027a36b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:46 +0200
-Subject: [PATCH 07/15] media: h264: Add stateless encode rate control
+Subject: [PATCH 08/18] media: h264: Add stateless encode rate control
 
 The H.264 stateless encode rate control implementation currently supports:
 - A direct QP mode;
@@ -36,7 +36,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  create mode 100644 include/media/v4l2-h264-enc-rc.h
 
 diff --git a/drivers/media/v4l2-core/Makefile b/drivers/media/v4l2-core/Makefile
-index 6aa1f05aeba9..69fc4575239d 100644
+index 6aa1f05aeb..69fc457523 100644
 --- a/drivers/media/v4l2-core/Makefile
 +++ b/drivers/media/v4l2-core/Makefile
 @@ -32,6 +32,8 @@ obj-$(CONFIG_V4L2_H264) += v4l2-h264.o
@@ -50,7 +50,7 @@ index 6aa1f05aeba9..69fc4575239d 100644
  obj-$(CONFIG_V4L2_VP9) += v4l2-vp9.o
 diff --git a/drivers/media/v4l2-core/v4l2-h264-enc-rc.c b/drivers/media/v4l2-core/v4l2-h264-enc-rc.c
 new file mode 100644
-index 000000000000..8f9622395eb6
+index 0000000000..8f9622395e
 --- /dev/null
 +++ b/drivers/media/v4l2-core/v4l2-h264-enc-rc.c
 @@ -0,0 +1,558 @@
@@ -613,7 +613,7 @@ index 000000000000..8f9622395eb6
 +MODULE_AUTHOR("Paul Kocialkowski <paulk@sys-base.io>");
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/media/v4l2-core/v4l2-h264-enc.c b/drivers/media/v4l2-core/v4l2-h264-enc.c
-index 3b7bca117818..67ea82cebe7f 100644
+index 3b7bca1178..67ea82cebe 100644
 --- a/drivers/media/v4l2-core/v4l2-h264-enc.c
 +++ b/drivers/media/v4l2-core/v4l2-h264-enc.c
 @@ -10,6 +10,7 @@
@@ -886,7 +886,7 @@ index 3b7bca117818..67ea82cebe7f 100644
  EXPORT_SYMBOL_GPL(v4l2_h264_enc_complete);
 diff --git a/include/media/v4l2-h264-enc-rc.h b/include/media/v4l2-h264-enc-rc.h
 new file mode 100644
-index 000000000000..8b453c3a212e
+index 0000000000..8b453c3a21
 --- /dev/null
 +++ b/include/media/v4l2-h264-enc-rc.h
 @@ -0,0 +1,108 @@
@@ -999,7 +999,7 @@ index 000000000000..8b453c3a212e
 +
 +#endif
 diff --git a/include/media/v4l2-h264-enc.h b/include/media/v4l2-h264-enc.h
-index 817a9ca2f169..6debdc95232c 100644
+index 817a9ca2f1..6debdc9523 100644
 --- a/include/media/v4l2-h264-enc.h
 +++ b/include/media/v4l2-h264-enc.h
 @@ -11,6 +11,7 @@
@@ -1049,7 +1049,7 @@ index 817a9ca2f169..6debdc95232c 100644
  	struct v4l2_h264_enc_rbsp rbsp;
  	unsigned int rbsp_update;
 diff --git a/include/media/v4l2-h264.h b/include/media/v4l2-h264.h
-index 3b00a1b67fe5..5e77f690902b 100644
+index 3b00a1b67f..5e77f69090 100644
 --- a/include/media/v4l2-h264.h
 +++ b/include/media/v4l2-h264.h
 @@ -161,6 +161,30 @@ struct v4l2_h264_reflist_builder {
@@ -1083,6 +1083,3 @@ index 3b00a1b67fe5..5e77f690902b 100644
  void
  v4l2_h264_init_reflist_builder(struct v4l2_h264_reflist_builder *b,
  		const struct v4l2_ctrl_h264_decode_params *dec_params,
--- 
-2.43.0
-

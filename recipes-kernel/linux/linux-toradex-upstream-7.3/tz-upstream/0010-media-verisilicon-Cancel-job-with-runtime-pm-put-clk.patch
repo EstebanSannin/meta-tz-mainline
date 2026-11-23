@@ -1,7 +1,7 @@
-From b1439a4d275b08e5d91f37fb2850b54ecea33ed9 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:48 +0200
-Subject: [PATCH 09/15] media: verisilicon: Cancel job with runtime pm put/clk
+Subject: [PATCH 10/18] media: verisilicon: Cancel job with runtime pm put/clk
  disable on failure
 
 The no-pm variant of hantro_job_finish is only good to use directly if
@@ -16,7 +16,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  1 file changed, 12 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/media/platform/verisilicon/hantro_drv.c b/drivers/media/platform/verisilicon/hantro_drv.c
-index ad71c0402ef3..7070f99f29f8 100644
+index ad71c0402e..7070f99f29 100644
 --- a/drivers/media/platform/verisilicon/hantro_drv.c
 +++ b/drivers/media/platform/verisilicon/hantro_drv.c
 @@ -170,29 +170,34 @@ void hantro_end_prepare_run(struct hantro_ctx *ctx)
@@ -61,6 +61,3 @@ index ad71c0402ef3..7070f99f29f8 100644
  }
  
  static const struct v4l2_m2m_ops vpu_m2m_ops = {
--- 
-2.43.0
-

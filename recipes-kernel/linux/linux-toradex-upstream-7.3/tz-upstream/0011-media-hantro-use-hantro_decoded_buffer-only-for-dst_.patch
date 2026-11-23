@@ -1,7 +1,7 @@
-From b31a7ed51b7f2796e39157b4251f538b032f4274 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Marco Felsch <m.felsch@pengutronix.de>
 Date: Fri, 22 May 2026 12:16:49 +0200
-Subject: [PATCH 10/15] media: hantro: use hantro_decoded_buffer only for
+Subject: [PATCH 11/18] media: hantro: use hantro_decoded_buffer only for
  dst_vq
 
 The dst_vq buffer size for encoders should not use the size of the
@@ -15,7 +15,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/media/platform/verisilicon/hantro_drv.c b/drivers/media/platform/verisilicon/hantro_drv.c
-index 7070f99f29f8..7c46409eebf0 100644
+index 7070f99f29..7c46409eeb 100644
 --- a/drivers/media/platform/verisilicon/hantro_drv.c
 +++ b/drivers/media/platform/verisilicon/hantro_drv.c
 @@ -249,7 +249,10 @@ queue_init(void *priv, struct vb2_queue *src_vq, struct vb2_queue *dst_vq)
@@ -30,6 +30,3 @@ index 7070f99f29f8..7c46409eebf0 100644
  	dst_vq->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_COPY;
  	dst_vq->lock = &ctx->dev->vpu_mutex;
  	dst_vq->dev = ctx->dev->v4l2_dev.dev;
--- 
-2.43.0
-

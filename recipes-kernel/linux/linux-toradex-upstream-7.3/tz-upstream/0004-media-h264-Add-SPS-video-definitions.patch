@@ -1,7 +1,7 @@
-From 106730be213155f688581ebca57b711e3fc0b4f3 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:42 +0200
-Subject: [PATCH 03/15] media: h264: Add SPS video definitions
+Subject: [PATCH 04/18] media: h264: Add SPS video definitions
 
 These definitions are used to build the video part of the SPS,
 including important fields such as frame cropping, timing info
@@ -14,7 +14,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  1 file changed, 115 insertions(+)
 
 diff --git a/include/media/v4l2-h264.h b/include/media/v4l2-h264.h
-index 1833c0556963..3b00a1b67fe5 100644
+index 1833c05569..3b00a1b67f 100644
 --- a/include/media/v4l2-h264.h
 +++ b/include/media/v4l2-h264.h
 @@ -12,6 +12,121 @@
@@ -139,6 +139,3 @@ index 1833c0556963..3b00a1b67fe5 100644
  /**
   * struct v4l2_h264_reflist_builder - Reference list builder object
   *
--- 
-2.43.0
-

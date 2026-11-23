@@ -1,7 +1,7 @@
-From 54c07f5a9a38da9e87274bc3df43fc844024fabd Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:51 +0200
-Subject: [PATCH 12/15] media: verisilicon: Add support for the VC8000E H.264
+Subject: [PATCH 13/18] media: verisilicon: Add support for the VC8000E H.264
  encoder
 
 This introduces support for the Hantro VC8000E H.264 encoder,
@@ -46,7 +46,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  create mode 100644 drivers/media/platform/verisilicon/hantro_vc8000e_regs.h
 
 diff --git a/drivers/media/platform/verisilicon/Kconfig b/drivers/media/platform/verisilicon/Kconfig
-index 3272a24db71d..ae186a848e24 100644
+index 3272a24db7..ae186a848e 100644
 --- a/drivers/media/platform/verisilicon/Kconfig
 +++ b/drivers/media/platform/verisilicon/Kconfig
 @@ -12,6 +12,7 @@ config VIDEO_HANTRO
@@ -58,7 +58,7 @@ index 3272a24db71d..ae186a848e24 100644
  	select V4L2_VP9
  	help
 diff --git a/drivers/media/platform/verisilicon/Makefile b/drivers/media/platform/verisilicon/Makefile
-index f6f019d04ff0..caa32de29ab7 100644
+index f6f019d04f..caa32de29a 100644
 --- a/drivers/media/platform/verisilicon/Makefile
 +++ b/drivers/media/platform/verisilicon/Makefile
 @@ -7,6 +7,8 @@ hantro-vpu-y += \
@@ -71,7 +71,7 @@ index f6f019d04ff0..caa32de29ab7 100644
  		hantro_g1_h264_dec.o \
  		hantro_g1_mpeg2_dec.o \
 diff --git a/drivers/media/platform/verisilicon/hantro.h b/drivers/media/platform/verisilicon/hantro.h
-index 2c503e033834..ac247209daaf 100644
+index 2c503e0338..ac247209da 100644
 --- a/drivers/media/platform/verisilicon/hantro.h
 +++ b/drivers/media/platform/verisilicon/hantro.h
 @@ -32,6 +32,7 @@ struct hantro_codec_ops;
@@ -124,7 +124,7 @@ index 2c503e033834..ac247209daaf 100644
  dma_addr_t hantro_get_ref(struct hantro_ctx *ctx, u64 ts);
  
 diff --git a/drivers/media/platform/verisilicon/hantro_drv.c b/drivers/media/platform/verisilicon/hantro_drv.c
-index 600a3699721a..3dedc5c779f1 100644
+index 600a369972..3dedc5c779 100644
 --- a/drivers/media/platform/verisilicon/hantro_drv.c
 +++ b/drivers/media/platform/verisilicon/hantro_drv.c
 @@ -421,6 +421,8 @@ static const struct v4l2_ctrl_ops hantro_av1_ctrl_ops = {
@@ -330,7 +330,7 @@ index 600a3699721a..3dedc5c779f1 100644
  		.cfg = {
  			.id = V4L2_CID_STATELESS_AV1_FRAME,
 diff --git a/drivers/media/platform/verisilicon/hantro_h264.c b/drivers/media/platform/verisilicon/hantro_h264.c
-index 2414782f1eb6..d71e041010ad 100644
+index 2414782f1e..d71e041010 100644
 --- a/drivers/media/platform/verisilicon/hantro_h264.c
 +++ b/drivers/media/platform/verisilicon/hantro_h264.c
 @@ -453,13 +453,11 @@ int hantro_h264_dec_prepare_run(struct hantro_ctx *ctx)
@@ -350,7 +350,7 @@ index 2414782f1eb6..d71e041010ad 100644
  		return -EINVAL;
  
 diff --git a/drivers/media/platform/verisilicon/hantro_hw.h b/drivers/media/platform/verisilicon/hantro_hw.h
-index 13e573f1f19d..e45b13d00456 100644
+index 13e573f1f1..e45b13d004 100644
 --- a/drivers/media/platform/verisilicon/hantro_hw.h
 +++ b/drivers/media/platform/verisilicon/hantro_hw.h
 @@ -12,11 +12,13 @@
@@ -407,7 +407,7 @@ index 13e573f1f19d..e45b13d00456 100644
  void hantro_hevc_dec_exit(struct hantro_ctx *ctx);
  int hantro_g2_hevc_dec_run(struct hantro_ctx *ctx);
 diff --git a/drivers/media/platform/verisilicon/hantro_v4l2.c b/drivers/media/platform/verisilicon/hantro_v4l2.c
-index 84e1dacc91cd..e37189b5b7c7 100644
+index 84e1dacc91..e37189b5b7 100644
 --- a/drivers/media/platform/verisilicon/hantro_v4l2.c
 +++ b/drivers/media/platform/verisilicon/hantro_v4l2.c
 @@ -633,6 +633,12 @@ static int hantro_set_fmt_out(struct hantro_ctx *ctx,
@@ -425,7 +425,7 @@ index 84e1dacc91cd..e37189b5b7c7 100644
  	ctx->dst_fmt.ycbcr_enc = pix_mp->ycbcr_enc;
 diff --git a/drivers/media/platform/verisilicon/hantro_vc8000e.c b/drivers/media/platform/verisilicon/hantro_vc8000e.c
 new file mode 100644
-index 000000000000..ebd726e13460
+index 0000000000..ebd726e134
 --- /dev/null
 +++ b/drivers/media/platform/verisilicon/hantro_vc8000e.c
 @@ -0,0 +1,68 @@
@@ -499,7 +499,7 @@ index 000000000000..ebd726e13460
 +}
 diff --git a/drivers/media/platform/verisilicon/hantro_vc8000e_h264_enc.c b/drivers/media/platform/verisilicon/hantro_vc8000e_h264_enc.c
 new file mode 100644
-index 000000000000..d3522d61443d
+index 0000000000..d3522d6144
 --- /dev/null
 +++ b/drivers/media/platform/verisilicon/hantro_vc8000e_h264_enc.c
 @@ -0,0 +1,883 @@
@@ -1388,7 +1388,7 @@ index 000000000000..d3522d61443d
 +}
 diff --git a/drivers/media/platform/verisilicon/hantro_vc8000e_regs.h b/drivers/media/platform/verisilicon/hantro_vc8000e_regs.h
 new file mode 100644
-index 000000000000..fad100572708
+index 0000000000..fad1005727
 --- /dev/null
 +++ b/drivers/media/platform/verisilicon/hantro_vc8000e_regs.h
 @@ -0,0 +1,2129 @@
@@ -3521,6 +3521,3 @@ index 000000000000..fad100572708
 +} __packed;
 +
 +#endif /* HANTRO_VC8000E_REGS_H_ */
--- 
-2.43.0
-

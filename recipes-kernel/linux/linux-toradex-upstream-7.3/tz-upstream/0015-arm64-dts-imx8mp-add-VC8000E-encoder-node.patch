@@ -1,7 +1,7 @@
-From d26eab736388106adcfa4726e34a1802a9e7383c Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Marco Felsch <m.felsch@pengutronix.de>
 Date: Fri, 22 May 2026 12:16:53 +0200
-Subject: [PATCH 14/15] arm64: dts: imx8mp: add VC8000E encoder node
+Subject: [PATCH 15/18] arm64: dts: imx8mp: add VC8000E encoder node
 
 Add support for the Versilicon VC8000E multi-codec stateless encoder.
 The IP integrated on the i.MX8MP supports H.264 and H.265 encoding.
@@ -13,10 +13,10 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  1 file changed, 11 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mp.dtsi b/arch/arm64/boot/dts/freescale/imx8mp.dtsi
-index 9cf9f6f08654..94247070c152 100644
+index 9cf9f6f086..94247070c1 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mp.dtsi
 +++ b/arch/arm64/boot/dts/freescale/imx8mp.dtsi
-@@ -2363,6 +2363,17 @@ vpu_g2: video-codec@38310000 {
+@@ -2363,6 +2363,17 @@
  			power-domains = <&vpumix_blk_ctrl IMX8MP_VPUBLK_PD_G2>;
  		};
  
@@ -34,6 +34,3 @@ index 9cf9f6f08654..94247070c152 100644
  		vpumix_blk_ctrl: blk-ctrl@38330000 {
  			compatible = "fsl,imx8mp-vpu-blk-ctrl", "syscon";
  			reg = <0x38330000 0x100>;
--- 
-2.43.0
-

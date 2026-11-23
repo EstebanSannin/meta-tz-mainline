@@ -1,7 +1,7 @@
-From 57d05d1071703be159b0787c003c77a23eb47c73 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:50 +0200
-Subject: [PATCH 11/15] media: verisilicon: Add common encoder parm and
+Subject: [PATCH 12/18] media: verisilicon: Add common encoder parm and
  frameintervals ioctls
 
 This introduces the required encoder ioctls for configuring the
@@ -17,7 +17,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  3 files changed, 105 insertions(+)
 
 diff --git a/drivers/media/platform/verisilicon/hantro.h b/drivers/media/platform/verisilicon/hantro.h
-index 0353de154a1e..2c503e033834 100644
+index 0353de154a..2c503e0338 100644
 --- a/drivers/media/platform/verisilicon/hantro.h
 +++ b/drivers/media/platform/verisilicon/hantro.h
 @@ -260,6 +260,9 @@ struct hantro_ctx {
@@ -31,7 +31,7 @@ index 0353de154a1e..2c503e033834 100644
  	int jpeg_quality;
  	int bit_depth;
 diff --git a/drivers/media/platform/verisilicon/hantro_drv.c b/drivers/media/platform/verisilicon/hantro_drv.c
-index 7c46409eebf0..600a3699721a 100644
+index 7c46409eeb..600a369972 100644
 --- a/drivers/media/platform/verisilicon/hantro_drv.c
 +++ b/drivers/media/platform/verisilicon/hantro_drv.c
 @@ -930,8 +930,11 @@ static int hantro_add_func(struct hantro_dev *vpu, unsigned int funcid)
@@ -47,7 +47,7 @@ index 7c46409eebf0..600a3699721a 100644
  
  	video_set_drvdata(vfd, vpu);
 diff --git a/drivers/media/platform/verisilicon/hantro_v4l2.c b/drivers/media/platform/verisilicon/hantro_v4l2.c
-index 0910a7bcfd62..84e1dacc91cd 100644
+index 0910a7bcfd..84e1dacc91 100644
 --- a/drivers/media/platform/verisilicon/hantro_v4l2.c
 +++ b/drivers/media/platform/verisilicon/hantro_v4l2.c
 @@ -213,6 +213,41 @@ static int vidioc_enum_framesizes(struct file *file, void *priv,
@@ -188,6 +188,3 @@ index 0910a7bcfd62..84e1dacc91cd 100644
  
  	.vidioc_decoder_cmd = v4l2_m2m_ioctl_stateless_decoder_cmd,
  	.vidioc_try_decoder_cmd = v4l2_m2m_ioctl_stateless_try_decoder_cmd,
--- 
-2.43.0
-

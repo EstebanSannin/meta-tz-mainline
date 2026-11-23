@@ -1,11 +1,10 @@
-From 532cb7ef00b4780593d05ebe4a4e8644f86ed52d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Stefano Viola <stefano.viola@toradex.com>
-Date: Wed, 4 Nov 2026 13:02:13 +0100
-Subject: [PATCH 15/16] local: fix v4l2-core Makefile after applying the series
- on 7.3.1
+Date: Thu, 19 Nov 2026 22:51:28 +0100
+Subject: [PATCH 16/18] local: fix v4l2-core Makefile after the VC8000E series
 
-Applying the series on 7.3.1 leaves two stale obj-$(CONFIG_V4L2_H264_ENC)
-lines from its earlier patches next to the final one. Drop them.
+Applying the series on 7.3.1 leaves two stale
+obj-$(CONFIG_V4L2_H264_ENC) lines next to the final one. Drop them.
 
 Upstream-Status: Inappropriate [fix-up for rebasing the series on 7.3.1]
 Signed-off-by: Stefano Viola <stefano.viola@toradex.com>
@@ -26,6 +25,3 @@ index 69fc457523..140d1596b3 100644
  obj-$(CONFIG_V4L2_H264_ENC) += v4l2-h264-enc.o v4l2-h264-enc-rbsp.o \
  			       v4l2-h264-enc-rc.o
  obj-$(CONFIG_V4L2_JPEG_HELPER) += v4l2-jpeg.o
--- 
-2.43.0
-

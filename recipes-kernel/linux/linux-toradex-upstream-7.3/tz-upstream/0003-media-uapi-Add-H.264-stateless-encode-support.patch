@@ -1,7 +1,7 @@
-From 0c70da4e874f6e42c7c112260008aa04fe542936 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:41 +0200
-Subject: [PATCH 02/15] media: uapi: Add H.264 stateless encode support
+Subject: [PATCH 03/18] media: uapi: Add H.264 stateless encode support
 
 This introduces the stateless H.264 encode params control that allows
 configuring an H.264 encode run.
@@ -21,7 +21,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  5 files changed, 102 insertions(+)
 
 diff --git a/drivers/media/v4l2-core/v4l2-ctrls-core.c b/drivers/media/v4l2-core/v4l2-ctrls-core.c
-index 648b88c868bc..a18945d71da7 100644
+index 648b88c868..a18945d71d 100644
 --- a/drivers/media/v4l2-core/v4l2-ctrls-core.c
 +++ b/drivers/media/v4l2-core/v4l2-ctrls-core.c
 @@ -391,6 +391,9 @@ void v4l2_ctrl_type_op_log(const struct v4l2_ctrl *ctrl)
@@ -115,7 +115,7 @@ index 648b88c868bc..a18945d71da7 100644
  		elem_size = sizeof(struct v4l2_ctrl_vp8_frame);
  		break;
 diff --git a/drivers/media/v4l2-core/v4l2-ctrls-defs.c b/drivers/media/v4l2-core/v4l2-ctrls-defs.c
-index e062f2088490..a0ac858968b6 100644
+index e062f20884..a0ac858968 100644
 --- a/drivers/media/v4l2-core/v4l2-ctrls-defs.c
 +++ b/drivers/media/v4l2-core/v4l2-ctrls-defs.c
 @@ -1219,6 +1219,7 @@ const char *v4l2_ctrl_get_name(u32 id)
@@ -137,7 +137,7 @@ index e062f2088490..a0ac858968b6 100644
  		*type = V4L2_CTRL_TYPE_VP8_FRAME;
  		break;
 diff --git a/include/media/v4l2-ctrls.h b/include/media/v4l2-ctrls.h
-index 327976b14d50..9aa79b798a69 100644
+index 327976b14d..9aa79b798a 100644
 --- a/include/media/v4l2-ctrls.h
 +++ b/include/media/v4l2-ctrls.h
 @@ -42,6 +42,7 @@ struct video_device;
@@ -157,7 +157,7 @@ index 327976b14d50..9aa79b798a69 100644
  	struct v4l2_ctrl_vp8_frame *p_vp8_frame;
  	struct v4l2_ctrl_hevc_sps *p_hevc_sps;
 diff --git a/include/uapi/linux/v4l2-controls.h b/include/uapi/linux/v4l2-controls.h
-index affec0ab4781..e2c005fde6f1 100644
+index affec0ab47..e2c005fde6 100644
 --- a/include/uapi/linux/v4l2-controls.h
 +++ b/include/uapi/linux/v4l2-controls.h
 @@ -1578,6 +1578,7 @@ struct v4l2_h264_reference {
@@ -208,7 +208,7 @@ index affec0ab4781..e2c005fde6f1 100644
  
  /* Current FWHT version */
 diff --git a/include/uapi/linux/videodev2.h b/include/uapi/linux/videodev2.h
-index 5373dba640fa..e19628c520e6 100644
+index 5373dba640..e19628c520 100644
 --- a/include/uapi/linux/videodev2.h
 +++ b/include/uapi/linux/videodev2.h
 @@ -1973,6 +1973,7 @@ enum v4l2_ctrl_type {
@@ -219,6 +219,3 @@ index 5373dba640fa..e19628c520e6 100644
  
  	V4L2_CTRL_TYPE_FWHT_PARAMS	    = 0x0220,
  
--- 
-2.43.0
-

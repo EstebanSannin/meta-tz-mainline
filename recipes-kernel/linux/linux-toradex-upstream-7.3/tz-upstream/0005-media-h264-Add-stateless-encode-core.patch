@@ -1,7 +1,7 @@
-From bb6b975314fdc0681959ae36a979a5bd12edd275 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:43 +0200
-Subject: [PATCH 04/15] media: h264: Add stateless encode core
+Subject: [PATCH 05/18] media: h264: Add stateless encode core
 
 The H.264 stateless encode core is the common implementation called by
 drivers to coordinate stateless encoding. It provides all the relevant
@@ -31,7 +31,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  create mode 100644 include/media/v4l2-h264-enc.h
 
 diff --git a/drivers/media/v4l2-core/Kconfig b/drivers/media/v4l2-core/Kconfig
-index d50ccac9733c..a88eaf8af48c 100644
+index d50ccac973..a88eaf8af4 100644
 --- a/drivers/media/v4l2-core/Kconfig
 +++ b/drivers/media/v4l2-core/Kconfig
 @@ -44,6 +44,10 @@ config V4L2_JPEG_HELPER
@@ -46,7 +46,7 @@ index d50ccac9733c..a88eaf8af48c 100644
  config V4L2_VP9
  	tristate
 diff --git a/drivers/media/v4l2-core/Makefile b/drivers/media/v4l2-core/Makefile
-index 329f0eadce99..73f4d5fab7f5 100644
+index 329f0eadce..73f4d5fab7 100644
 --- a/drivers/media/v4l2-core/Makefile
 +++ b/drivers/media/v4l2-core/Makefile
 @@ -30,6 +30,7 @@ obj-$(CONFIG_V4L2_FLASH_LED_CLASS) += v4l2-flash-led-class.o
@@ -59,7 +59,7 @@ index 329f0eadce99..73f4d5fab7f5 100644
  obj-$(CONFIG_V4L2_VP9) += v4l2-vp9.o
 diff --git a/drivers/media/v4l2-core/v4l2-h264-enc.c b/drivers/media/v4l2-core/v4l2-h264-enc.c
 new file mode 100644
-index 000000000000..d4e1450691fb
+index 0000000000..d4e1450691
 --- /dev/null
 +++ b/drivers/media/v4l2-core/v4l2-h264-enc.c
 @@ -0,0 +1,555 @@
@@ -620,7 +620,7 @@ index 000000000000..d4e1450691fb
 +MODULE_LICENSE("GPL");
 diff --git a/include/media/v4l2-h264-enc.h b/include/media/v4l2-h264-enc.h
 new file mode 100644
-index 000000000000..2978a73baacd
+index 0000000000..2978a73baa
 --- /dev/null
 +++ b/include/media/v4l2-h264-enc.h
 @@ -0,0 +1,79 @@
@@ -703,6 +703,3 @@ index 000000000000..2978a73baacd
 +			   struct vb2_v4l2_buffer *buffer);
 +
 +#endif
--- 
-2.43.0
-

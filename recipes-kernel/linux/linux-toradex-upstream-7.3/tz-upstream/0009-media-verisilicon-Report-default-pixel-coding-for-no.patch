@@ -1,7 +1,7 @@
-From 40cdea19df0dc48abeef6ad84824904c4f5c3749 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:47 +0200
-Subject: [PATCH 08/15] media: verisilicon: Report default pixel coding for
+Subject: [PATCH 09/18] media: verisilicon: Report default pixel coding for
  non-JPEG and fix JPEG case
 
 The JPEG colorspace is very specific to the JPEG coded format and is
@@ -19,7 +19,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  1 file changed, 14 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/media/platform/verisilicon/hantro_v4l2.c b/drivers/media/platform/verisilicon/hantro_v4l2.c
-index 83af9fa1ce94..0910a7bcfd62 100644
+index 83af9fa1ce..0910a7bcfd 100644
 --- a/drivers/media/platform/verisilicon/hantro_v4l2.c
 +++ b/drivers/media/platform/verisilicon/hantro_v4l2.c
 @@ -419,10 +419,20 @@ hantro_reset_fmt(struct v4l2_pix_format_mplane *fmt,
@@ -47,6 +47,3 @@ index 83af9fa1ce94..0910a7bcfd62 100644
  }
  
  static void
--- 
-2.43.0
-

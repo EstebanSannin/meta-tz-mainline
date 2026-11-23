@@ -1,7 +1,7 @@
-From 18f4c9c8989f11374cfa2c0ed8cf0d9f21d78902 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Paul Kocialkowski <paulk@sys-base.io>
 Date: Fri, 22 May 2026 12:16:40 +0200
-Subject: [PATCH 01/15] media: h264: Add a more generic reflist builder init
+Subject: [PATCH 02/18] media: h264: Add a more generic reflist builder init
 
 This should become part of a larger reflist builder rework.
 
@@ -13,7 +13,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-media/20260522101653.2
  2 files changed, 76 insertions(+)
 
 diff --git a/drivers/media/v4l2-core/v4l2-h264.c b/drivers/media/v4l2-core/v4l2-h264.c
-index 2323f559c6a3..a3e180444725 100644
+index 2323f559c6..a3e1804447 100644
 --- a/drivers/media/v4l2-core/v4l2-h264.c
 +++ b/drivers/media/v4l2-core/v4l2-h264.c
 @@ -105,6 +105,75 @@ v4l2_h264_init_reflist_builder(struct v4l2_h264_reflist_builder *b,
@@ -93,7 +93,7 @@ index 2323f559c6a3..a3e180444725 100644
  			     const struct v4l2_h264_reference *ref)
  {
 diff --git a/include/media/v4l2-h264.h b/include/media/v4l2-h264.h
-index 0d9eaa956123..1833c0556963 100644
+index 0d9eaa9561..1833c05569 100644
 --- a/include/media/v4l2-h264.h
 +++ b/include/media/v4l2-h264.h
 @@ -42,6 +42,7 @@ struct v4l2_h264_reflist_builder {
@@ -117,6 +117,3 @@ index 0d9eaa956123..1833c0556963 100644
  /**
   * v4l2_h264_build_b_ref_lists() - Build the B0/B1 reference lists
   *
--- 
-2.43.0
-
