@@ -6,23 +6,24 @@
 #   and the Teflon TensorFlow Lite delegate for the NPU. Mesa's libclc, which rusticl needs.
 #   GStreamer (tz-upstream/imx8mp): main with the GL on GBM fixes and the V4L2 stateless H.264 encoder.
 #
-# Everything is built on one pinned Debian sid snapshot, the toolchain the OpenCL work was validated with.
+# Everything is built on one pinned Debian sid snapshot, the toolchain the OpenCL work was validated with,
+# from a dated sid image older than the snapshot (apt cannot downgrade a newer base).
 # Mesa goes to /opt/mesa and GStreamer to /opt/gst; the environment below makes applications use them.
 #
-#   docker buildx build --platform linux/arm64 -t tz-upstream-imx8mp:2 .
-#   docker run --rm -it --privileged -v /dev:/dev -v /run/udev:/run/udev:ro tz-upstream-imx8mp:2 clinfo
+#   docker buildx build --platform linux/arm64 -t tz-upstream-imx8mp:3 .
+#   docker run --rm -it --privileged -v /dev:/dev -v /run/udev:/run/udev:ro tz-upstream-imx8mp:3 clinfo
 #
 # To build from local source trees instead of GitHub, override the source stages:
 #   --build-context mesa-src=<mesa tree> --build-context gst-src=<gstreamer tree>
 
 ARG SNAPSHOT=20261115T000000Z
 ARG MESA_REPO=https://github.com/EstebanSannin/mesa.git
-ARG MESA_COMMIT=b9939148ef63fbefb0803e35ab347c874dc2b040
+ARG MESA_COMMIT=4ddbea6679e539022fa49755aaa8807dfdd98e58
 ARG GST_REPO=https://github.com/EstebanSannin/gstreamer.git
 ARG GST_COMMIT=feabad2506ff3c48475523a0f5620a55b51df157
 ARG LIBCLC_REF=22.1.8.3
 
-FROM debian:sid AS base
+FROM debian:sid-20261104 AS base
 ARG SNAPSHOT
 RUN rm -f /etc/apt/sources.list.d/debian.sources && \
     echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/${SNAPSHOT} sid main" \
