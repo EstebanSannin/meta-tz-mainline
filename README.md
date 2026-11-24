@@ -29,7 +29,8 @@ changes. For evaluation, not for products.
 
 **Demo container** `tz-upstream-imx8mp-demo:1` (`containers/tz-upstream-imx8mp-demo`): the same plus glmark2, kmscube,
 clpeak, a TensorFlow Lite runtime, two Coral models, test clips and `tz-demo`, which shows and checks each unit.
-[GETTING-STARTED.md](GETTING-STARTED.md) installs the release and runs it.
+[GETTING-STARTED.pdf](GETTING-STARTED.pdf) installs the release, runs the demos and sums up what the release adds
+to upstream. Its source is in `docs/getting-started` (`build.sh` renders it with headless Chrome).
 
 Container `:3` replaces `:2`, which gave wrong NPU results: with compute on, the container's default, Teflon's jobs
 went to the GPU (Mesa commit 4ddbea6679 fixes it).

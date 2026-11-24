@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Getting Started: Upstream Torizon OS on Verdin iMX8M Plus</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Torizon Design System tokens (brand navy, interactive blue, Inter). Print layout, A4. */
+:root {
+  --navy: #001f3f; --navy-deep: #00172e; --navy-mid: #003266;
+  --blue: #0092ff; --blue-link: #005ab8; --amber: #ffc107;
+  --fg: #00172e; --body: #1a4775; --muted: #4d7094; --line: #e6e6e6; --head-bg: #f3f6f9; --code-bg: #f3f6f9;
+  --on-navy: #eaf2fb; --on-navy-2: #99adc2; --on-navy-link: #66beff;
+  --pass: #107050; --pass-bg: #d2f9ec; --warn: #b25600; --warn-bg: #fff2cc; --new: #005ab8; --new-bg: #d6eeff;
+  --s1: #0072d6; --s2: #b8860b; --grid: #e6e9ee;
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@page {
+  size: A4; margin: 18mm 17mm 20mm;
+  @bottom-left { content: "Upstream Torizon OS on Verdin iMX8M Plus \00B7  Engineering release 1"; font: 400 8pt var(--font-sans); color: #4d7094; }
+  @bottom-right { content: counter(page) " / " counter(pages); font: 500 8pt var(--font-sans); color: #4d7094; }
+}
+@page :first { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html { background: #fff; }
+body { margin: 0; background: #fff; color: var(--body); font: 400 9.6pt/1.55 var(--font-sans); }
+h1, h2, h3 { color: var(--fg); font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+h2 { font-size: 17pt; line-height: 1.25; }
+h3 { font-size: 11.5pt; line-height: 1.3; margin-top: 4pt; }
+p { margin: 0; }
+a { color: var(--blue-link); text-decoration: none; }
+strong { color: var(--fg); font-weight: 600; }
+code { font-family: var(--font-mono); font-size: .9em; color: var(--fg); background: var(--code-bg); padding: 0 3px; border-radius: 3px; }
+pre { margin: 0; font: 400 7.9pt/1.5 var(--font-mono); color: var(--fg); background: var(--code-bg); border-left: 3px solid var(--blue); border-radius: 6px; padding: 8pt 10pt; white-space: pre-wrap; overflow-wrap: anywhere; break-inside: avoid; }
+pre .c { color: var(--muted); }
+pre .ok { color: var(--pass); font-weight: 600; }
+ul, ol { margin: 0; padding-left: 15pt; display: grid; gap: 3pt; }
+li::marker { color: var(--blue); font-weight: 600; }
+.eyebrow { font: 600 7.5pt/1.2 var(--font-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--blue); }
+
+/* cover */
+.cover { height: 297mm; display: grid; grid-template-rows: auto 1fr auto; break-after: page; }
+.mast { background: var(--navy); color: var(--on-navy); padding: 20mm 18mm 15mm; border-bottom: 4px solid var(--amber); display: grid; gap: 15mm; }
+.mast img { height: 13mm; width: auto; display: block; }
+.mast .eyebrow { color: var(--on-navy-link); }
+.mast h1 { color: #fff; font-size: 31pt; line-height: 1.1; margin-top: 4mm; max-width: 15ch; }
+.mast .lede { color: var(--on-navy-2); font-size: 11.5pt; line-height: 1.5; max-width: 60ch; margin-top: 5mm; }
+.meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; border-top: 1px solid #1a3a5c; padding-top: 5mm; margin: 0; }
+.meta dt { font: 600 7pt/1.2 var(--font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--on-navy-2); }
+.meta dd { margin: 3pt 0 0; color: var(--on-navy); font-size: 9pt; }
+.glance { padding: 12mm 18mm 0; display: grid; gap: 5mm; align-content: start; }
+.tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; }
+.tile { border: 1px solid var(--line); border-radius: 10px; padding: 5mm 5.5mm; display: grid; gap: 2mm; align-content: start; box-shadow: 0 2px 6px rgba(0, 23, 46, .06); }
+.tile .k { font: 600 7pt/1.2 var(--font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile .n { font: 700 19pt/1.05 var(--font-sans); color: var(--fg); letter-spacing: -0.02em; }
+.tile .n small { font-size: 11pt; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+.tile p { font-size: 9pt; color: var(--body); }
+.cover-foot { padding: 0 18mm 12mm; color: var(--muted); font-size: 8pt; display: flex; justify-content: space-between; gap: 6mm; border-top: 0; }
+
+/* body */
+main { display: block; }
+section { display: block; }
+section + section { margin-top: 9mm; }
+section.page { margin-top: 0; }
+section > * + *, .keep > * + * { margin-top: 3.2mm; }
+section.page { break-before: page; }
+.sechead { display: grid; gap: 1.5mm; border-bottom: 2px solid var(--line); padding-bottom: 2.5mm; }
+.step { display: inline-grid; place-items: center; width: 6.5mm; height: 6.5mm; border-radius: 50%; background: var(--navy); color: #fff; font: 700 9pt/1 var(--font-sans); margin-right: 2.5mm; vertical-align: 2px; }
+table { border-collapse: collapse; width: 100%; font-size: 8.4pt; line-height: 1.45; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th, td { text-align: left; vertical-align: top; padding: 5pt 7pt; border-bottom: 1px solid var(--line); }
+th { font: 600 6.8pt/1.3 var(--font-sans); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); background: var(--head-bg); }
+td:first-child { font-weight: 600; color: var(--fg); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cmp td:nth-child(2) { color: var(--muted); }
+.cmp td:nth-child(3) { background: #f5faff; }
+.cmp td:nth-child(3) b { color: var(--new); font-weight: 700; }
+.pill { display: inline-block; font: 600 6.5pt/1 var(--font-sans); letter-spacing: .06em; text-transform: uppercase; padding: 3pt 6pt; border-radius: 999px; color: var(--new); background: var(--new-bg); vertical-align: 1px; }
+.pill.pass { color: var(--pass); background: var(--pass-bg); }
+.note { font-size: 8.2pt; color: var(--muted); }
+.callout { border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 6px; padding: 4mm 5mm; display: grid; gap: 2mm; break-inside: avoid; }
+.callout h3 { margin: 0; }
+.figure { border: 1px solid var(--line); border-radius: 10px; padding: 4.5mm 5mm 3mm; display: grid; gap: 2.5mm; break-inside: avoid; }
+.figure .legend { display: flex; gap: 6mm; font-size: 8.2pt; color: var(--body); align-items: center; flex-wrap: wrap; }
+.sw { display: inline-block; width: 9pt; height: 9pt; border-radius: 2px; margin-right: 4pt; vertical-align: -1px; }
+.figure svg { width: 100%; height: auto; display: block; }
+.figure svg .tick { font: 400 9px var(--font-sans); fill: #4d7094; }
+.figure svg .name { font: 600 11px var(--font-sans); fill: #00172e; }
+.figure svg .note { font: 400 9.5px var(--font-sans); fill: #4d7094; }
+.figure svg .val { font: 600 10px var(--font-sans); fill: #00172e; }
+.figure svg .val.dim { font-weight: 400; fill: #4d7094; }
+.figure svg .delta { font: 700 11px var(--font-sans); fill: #107050; }
+.figure svg .delta.neg { fill: #b25600; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.keep { break-inside: avoid; display: block; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <header class="mast">
+    <img src="torizon-logo-dark.svg" alt="Torizon">
+    <div>
+      <div class="eyebrow">Getting started &middot; Engineering release 1</div>
+      <h1>Upstream Torizon OS on Verdin iMX8M Plus</h1>
+      <p class="lede">Torizon OS on mainline Linux 7.3.1, with upstream Mesa and GStreamer and our changes, tuned for the i.MX 8M Plus. No NXP downstream drivers: GPU, NPU, video encode and decode, ISI and display all run on upstream code. This guide installs it and shows each unit working in a few commands.</p>
+    </div>
+    <dl class="meta">
+      <div><dt>Release</dt><dd>engineering-release-1</dd></div>
+      <div><dt>Kernel</dt><dd>Linux 7.3.1, 18 patches</dd></div>
+      <div><dt>Container</dt><dd>tz-upstream-imx8mp:3</dd></div>
+      <div><dt>Date</dt><dd>24 November 2026</dd></div>
+    </dl>
+  </header>
+  <div class="glance">
+    <div class="eyebrow">At a glance</div>
+    <div class="tiles">
+      <div class="tile"><div class="k">GPU compute</div><div class="n">OpenGL ES 3.1 <small>+ OpenCL 3.0</small></div><p>Neither exists for this GPU in mainline Mesa. 16,008 OpenGL ES 3.1 conformance tests pass, none fail.</p></div>
+      <div class="tile"><div class="k">NPU</div><div class="n">2.62 ms <small>MobileNet V1</small></div><p>2.9 times faster than stock Mesa and 22% faster than NXP's driver. Correct results on all six models tested.</p></div>
+      <div class="tile"><div class="k">Video encode</div><div class="n">131&ndash;138 fps <small>H.264 1080p</small></div><p>Mainline has no encoder driver for the VC8000E. NXP's encoder does 77&ndash;97 fps on the same clips.</p></div>
+      <div class="tile"><div class="k">Everything at once</div><div class="n">0 <small>dropped frames</small></div><p>Camera-like 1080p chain, HEVC decode, NPU and OpenCL together for 60 s: no drops, no GPU hang, no kernel error.</p></div>
+    </div>
+  </div>
+  <footer class="cover-foot">
+    <span>Experimental. For evaluation, not for products.</span>
+    <span>github.com/EstebanSannin/meta-tz-mainline</span>
+  </footer>
+</div>
+
+<main>
+
+<section>
+  <div class="sechead"><div class="eyebrow">Why this release</div><h2>What It Adds to Upstream</h2></div>
+  <p>Mainline Linux and Mesa already run the i.MX 8M Plus well for CPU, memory, display and video decode. What they lack is GPU compute, a usable NPU, a video encoder and 2D conversion. This release closes those gaps. The table compares mainline today (Linux 7.3, Mesa main, the base of Mesa 26.3), this release and NXP's downstream stack in Torizon OS 7.7.0, all measured on the same Verdin iMX8M Plus Quad.</p>
+  <table class="cmp">
+    <thead><tr><th style="width:15%">Area</th><th style="width:24%">Mainline today</th><th style="width:38%">This release</th><th style="width:23%">NXP, Torizon OS 7.7.0</th></tr></thead>
+    <tbody>
+      <tr><td>OpenGL ES</td><td>3.0. Forcing 3.1: 9,075 tests pass, 6,600 fail</td><td><b>OpenGL ES 3.1</b> with compute shaders, storage buffers, shared memory, atomics and images. dEQP-GLES31: 16,008 pass, 0 fail, 0 GPU hangs</td><td>OpenGL ES 3.1</td></tr>
+      <tr><td>OpenCL</td><td>None for Vivante GPUs</td><td><b>OpenCL 3.0</b> (embedded profile) on the GPU through rusticl, with 64-bit integers, half precision and OpenGL sharing. Khronos CTS: core 431/431, images 44/44, math 92/92. clpeak 15.7 GFLOPS fp32, 31.3 fp16</td><td>OpenCL 1.2, full profile. 15.8 / 31.4 GFLOPS</td></tr>
+      <tr><td>OpenCV on OpenCL</td><td>Runs on the CPU only</td><td>GaussianBlur 299 ms, Canny 282 ms, HSV 58.9 ms at 1080p: <b>5.1&times;, 1.4&times; and 1.2&times; faster than NXP</b>. Local memory, which NXP lacks</td><td>1,521 / 406 / 71.7 ms</td></tr>
+      <tr><td>NPU results</td><td>Wrong output on 4 of 6 Coral models</td><td><b>Correct on all 6</b>: same classes and objects as the CPU</td><td>Correct on all 6</td></tr>
+      <tr><td>NPU speed</td><td>2.2 to 3.8&times; slower than NXP</td><td><b>Faster than NXP on 5 of 6 models</b>, up to 37%; SSD MobileNet V2 5% slower. Faster on all 6 than Torizon OS 8's newer NXP stack</td><td>Reference</td></tr>
+      <tr><td>H.264 encode</td><td>No driver in mainline</td><td>VC8000E driver series with 5 GStreamer fixes and NXP's 500 MHz clock: <b>131&ndash;138 fps</b> at 1080p, same quality, no leak or deadlock</td><td>77&ndash;97 fps (vpuenc_h264)</td></tr>
+      <tr><td>2D conversion</td><td>ISI disabled on Verdin</td><td><b>ISI enabled</b>: 1080p YUYV to NV12 at 195 fps, written straight into the encoder's buffers</td><td>G2D</td></tr>
+      <tr><td>Video through the GPU</td><td>glimagesink shows nothing on GBM; 1080p at about 19 fps; BT.601 colours (wrong colours on Mesa 26.3)</td><td>GBM display works, <b>1080p30 with no drops</b>, BT.709 colours, zero copy</td><td>Composited on the 2D GPU</td></tr>
+      <tr><td>Shader code</td><td>Extra copies in texture and uniform shaders</td><td>Two code generation fixes: glmark2 texture scenes <b>685 &rarr; 807 fps</b>; shaders reading two uniforms 36.4 &rarr; 21.0 ms per 1080p pass</td><td>&ndash;</td></tr>
+      <tr><td>NPU latency</td><td>Cores enter a 1.5 ms idle state between NPU jobs</td><td>etnaviv holds a CPU latency request only while the GPU or NPU is busy: MobileNet V2 slowest 5% <b>4.03 &rarr; 3.14 ms</b></td><td>Cores never reach deep idle</td></tr>
+    </tbody>
+  </table>
+  <p class="note">None of these changes is upstream yet. The code is public on GitHub (sources on the last page). Figures from the evaluation of 4&ndash;24 November 2026; NPU times are medians of 5 rounds of 200 inferences.</p>
+</section>
+
+<section class="page">
+  <div class="figure">
+    <div class="sechead" style="border:0;padding:0"><div class="eyebrow">NPU</div><h3 style="margin:0">Inference Time per Model, This Release Against NXP</h3></div>
+    <div class="legend"><span><span class="sw" style="background:var(--s1)"></span>This release (Mesa Teflon)</span><span><span class="sw" style="background:var(--s2)"></span>NXP, Torizon OS 7.7.0 (VX delegate)</span></div>
+    <svg viewBox="0 0 720 312" role="img" aria-label="NPU inference time per model, this release against NXP Torizon OS 7.7.0" xmlns="http://www.w3.org/2000/svg">
+<line x1="176" y1="6" x2="176" y2="270" stroke="var(--grid)" stroke-width="1"/>
+<text x="176" y="286" class="tick" text-anchor="middle">0</text>
+<line x1="266" y1="6" x2="266" y2="270" stroke="var(--grid)" stroke-width="1"/>
+<text x="266" y="286" class="tick" text-anchor="middle">5</text>
+<line x1="356" y1="6" x2="356" y2="270" stroke="var(--grid)" stroke-width="1"/>
+<text x="356" y="286" class="tick" text-anchor="middle">10</text>
+<line x1="446" y1="6" x2="446" y2="270" stroke="var(--grid)" stroke-width="1"/>
+<text x="446" y="286" class="tick" text-anchor="middle">15</text>
+<line x1="536" y1="6" x2="536" y2="270" stroke="var(--grid)" stroke-width="1"/>
+<text x="536" y="286" class="tick" text-anchor="middle">20</text>
+<line x1="626" y1="6" x2="626" y2="270" stroke="var(--grid)" stroke-width="1"/>
+<text x="626" y="286" class="tick" text-anchor="middle">25</text>
+<text x="626" y="302" class="tick" text-anchor="end">ms per inference, lower is better</text>
+<text x="164" y="25" class="name" text-anchor="end">EfficientNet-EdgeTPU-S</text>
+<text x="164" y="39" class="note" text-anchor="end">stock Mesa: wrong output</text>
+<path d="M176,14 h147.9 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-147.9 z" fill="var(--s1)"/>
+<path d="M176,29 h238.5 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-238.5 z" fill="var(--s2)"/>
+<text x="333.91999999999996" y="24.5" class="val">8.44</text>
+<text x="424.46000000000004" y="39.5" class="val dim">13.47</text>
+<text x="716" y="32" class="delta" text-anchor="end">37% faster</text>
+<text x="164" y="69" class="name" text-anchor="end">MobileNet V1</text>
+<text x="164" y="83" class="note" text-anchor="end">stock Mesa: 7.6 ms</text>
+<path d="M176,58 h43.2 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-43.2 z" fill="var(--s1)"/>
+<path d="M176,73 h56.7 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-56.7 z" fill="var(--s2)"/>
+<text x="229.16" y="68.5" class="val">2.62</text>
+<text x="242.66" y="83.5" class="val dim">3.37</text>
+<text x="716" y="76" class="delta" text-anchor="end">22% faster</text>
+<text x="164" y="113" class="name" text-anchor="end">MobileNet V2</text>
+<text x="164" y="127" class="note" text-anchor="end">stock Mesa: 13.3 ms</text>
+<path d="M176,102 h51.6 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-51.6 z" fill="var(--s1)"/>
+<path d="M176,117 h57.7 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-57.7 z" fill="var(--s2)"/>
+<text x="237.62" y="112.5" class="val">3.09</text>
+<text x="243.74" y="127.5" class="val dim">3.43</text>
+<text x="716" y="120" class="delta" text-anchor="end">10% faster</text>
+<text x="164" y="157" class="name" text-anchor="end">Inception V1</text>
+<text x="164" y="171" class="note" text-anchor="end">stock Mesa: wrong output</text>
+<path d="M176,146 h90.3 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-90.3 z" fill="var(--s1)"/>
+<path d="M176,161 h95.7 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-95.7 z" fill="var(--s2)"/>
+<text x="276.32" y="156.5" class="val">5.24</text>
+<text x="281.72" y="171.5" class="val dim">5.54</text>
+<text x="716" y="164" class="delta" text-anchor="end">5% faster</text>
+<text x="164" y="201" class="name" text-anchor="end">SSDLite MobileDet</text>
+<text x="164" y="215" class="note" text-anchor="end">stock Mesa: wrong output</text>
+<path d="M176,190 h360.1 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-360.1 z" fill="var(--s1)"/>
+<path d="M176,205 h387.9 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-387.9 z" fill="var(--s2)"/>
+<text x="546.14" y="200.5" class="val">20.23</text>
+<text x="573.86" y="215.5" class="val dim">21.77</text>
+<text x="716" y="208" class="delta" text-anchor="end">7% faster</text>
+<text x="164" y="245" class="name" text-anchor="end">SSD MobileNet V2</text>
+<text x="164" y="259" class="note" text-anchor="end">stock Mesa: wrong output</text>
+<path d="M176,234 h207.1 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-207.1 z" fill="var(--s1)"/>
+<path d="M176,249 h197.6 a4,4 0 0 1 4,4 v5 a4,4 0 0 1 -4,4 h-197.6 z" fill="var(--s2)"/>
+<text x="393.14" y="244.5" class="val">11.73</text>
+<text x="383.6" y="259.5" class="val dim">11.20</text>
+<text x="716" y="252" class="delta neg" text-anchor="end">5% slower</text>
+</svg>
+    <p class="note">Quantized TensorFlow Lite models from the Coral test set, performance governor. Under each model: the same model on stock Mesa main. Every result of this release matches the CPU reference.</p>
+  </div>
+
+  <div class="callout">
+    <h3>Where Upstream Was Already Ahead</h3>
+    <ul>
+      <li>Hardware video decode: H.264 1080p 202 fps against 172, HEVC 378 against 291 (+17% and +30%).</li>
+      <li>Playback on HDMI uses 1&ndash;3% of the CPU against 6&ndash;8%: decoded frames go to the GPU without a copy.</li>
+      <li>The NPU is ready in 0.5&ndash;1 s on the first inference, against 3.3&ndash;9 s for NXP's VX delegate.</li>
+      <li>CPU, memory and Ethernet are identical; the kernel is current, with years of upstream fixes.</li>
+    </ul>
+  </div>
+
+  <div class="sechead" style="margin-top:3mm"><div class="eyebrow">Before you start</div><h2>Hardware Units and Drivers</h2></div>
+  <table>
+    <thead><tr><th style="width:27%">Hardware unit</th><th style="width:30%">Upstream driver</th><th>What you get</th></tr></thead>
+    <tbody>
+      <tr><td>GPU, Vivante GC7000UL</td><td>etnaviv (kernel and Mesa)</td><td>OpenGL ES 3.1; OpenCL 3.0, embedded profile, through rusticl</td></tr>
+      <tr><td>NPU, Vivante VIP8000</td><td>etnaviv and Mesa Teflon</td><td>TensorFlow Lite delegate for quantized models</td></tr>
+      <tr><td>VPU decoders, Hantro G1 and G2</td><td>hantro, V4L2 stateless</td><td>H.264, HEVC, VP8, VP9 decoding, 1080p</td></tr>
+      <tr><td>VPU encoder, VC8000E</td><td>hantro (patch series), V4L2 stateless</td><td>H.264 encoding, 1080p</td></tr>
+      <tr><td>ISI</td><td>imx8-isi, V4L2 memory-to-memory</td><td>Colour conversion and downscaling</td></tr>
+      <tr><td>Display</td><td>imx-lcdif, HDMI</td><td>DRM/KMS, Wayland or GBM</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="page">
+  <div class="sechead"><div class="eyebrow">Install</div><h2>Install the Release</h2></div>
+  <h3>What You Need</h3>
+  <ul>
+    <li>A Verdin iMX8M Plus <strong>Quad</strong> module. QuadLite modules have no NPU and no VPU. Tested on Verdin iMX8M Plus Quad 4GB WB IT.</li>
+    <li>A Dahlia or Verdin Development Board carrier board, on Ethernet with DHCP.</li>
+    <li>A USB stick of 1 GB or more for the installer image.</li>
+    <li>An HDMI monitor for the display demos. Everything else also works without a display.</li>
+  </ul>
+
+  <h3><span class="step">1</span>Get the Release</h3>
+  <p>Download from the GitHub release <a href="https://github.com/EstebanSannin/meta-tz-mainline/releases/tag/engineering-release-1">engineering-release-1</a> of meta-tz-mainline:</p>
+  <table>
+    <thead><tr><th style="width:62%">File</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td><code>torizon-docker-verdin-imx8mp-Tezi_8.0.0-devel-20261123173501+build.0.tar</code></td><td>OS image for Toradex Easy Installer, 274 MB</td></tr>
+      <tr><td><code>tz-upstream-imx8mp-3.tar.gz</code></td><td>The base container, for boards without internet (optional)</td></tr>
+      <tr><td><code>SHA256SUMS</code></td><td>Checksums: <code>sha256sum -c SHA256SUMS</code></td></tr>
+    </tbody>
+  </table>
+  <p>The containers are on Docker Hub: <code>samnite/tz-upstream-imx8mp:3</code> is the graphics, compute, NPU and video stack, a base for your applications; <code>samnite/tz-upstream-imx8mp-demo:1</code> adds the demos and the self-test of this guide.</p>
+
+  <h3><span class="step">2</span>Install It with Toradex Easy Installer</h3>
+  <ol>
+    <li>Unpack the archive on the USB stick (FAT32 or ext4). It makes one folder with <code>image.json</code> in it:
+<pre>tar xf torizon-docker-verdin-imx8mp-Tezi_8.0.0-devel-20261123173501+build.0.tar -C /media/&lt;stick&gt;</pre></li>
+    <li>Start Toradex Easy Installer on the module. If the module does not start it already, load it over USB in recovery mode, as described in Toradex's guide <a href="https://developer.toradex.com/easy-installer/toradex-easy-installer/loading-toradex-easy-installer">Loading Toradex Easy Installer</a>.</li>
+    <li>Plug in the USB stick. The installer lists <strong>Torizon OS (UPSTREAM) 8.0.0-devel-20261123173501</strong>. Select it, press Install and confirm. Installing takes a few minutes.</li>
+    <li>Reboot when the installer says it is done.</li>
+  </ol>
+
+  <h3><span class="step">3</span>Log In</h3>
+  <p>The board gets its address over DHCP and announces itself over mDNS as <code>verdin-imx8mp-&lt;serial&gt;.local</code>, where <code>&lt;serial&gt;</code> is the 8-digit serial number on the module label. The user is <code>torizon</code> with password <code>torizon</code>; change it with <code>passwd</code>.</p>
+<pre>ssh torizon@verdin-imx8mp-&lt;serial&gt;.local
+<span class="c">$</span> uname -r
+7.3.1-8.0.0-devel-00018-g1dd50f6c1323
+<span class="c">$</span> grep PRETTY_NAME /etc/os-release
+PRETTY_NAME="Torizon OS Upstream 8.0.0-devel-20261123173501+build.0 (wrynose)"</pre>
+</section>
+
+<section class="page">
+  <div class="sechead"><div class="eyebrow">Demos</div><h2><span class="step">4</span>Run the Demo Container</h2></div>
+<pre>docker pull samnite/tz-upstream-imx8mp-demo:1
+alias tz-demo='docker run --rm -it --privileged -v /dev:/dev -v /run/udev:/run/udev:ro \
+    samnite/tz-upstream-imx8mp-demo:1 tz-demo'
+tz-demo info</pre>
+  <p><code>--privileged</code> and the two volumes give the container the GPU, the NPU, the video devices and the display. <code>tz-demo</code> alone lists the commands. <code>tz-demo info</code> shows what the system reports:</p>
+<pre>Kernel:   7.3.1-8.0.0-devel-00018-g1dd50f6c1323
+Mesa:     4ddbea6679e5, GStreamer: feabad2506ff
+DRM:      /dev/dri/renderD128 etnaviv
+OpenGL:   renderer: Vivante GC7000 rev 6204
+OpenGL:   version: OpenGL ES 3.1 Mesa 27.0.0-devel
+OpenCL:   Platform #0: rusticl
+OpenCL:    `-- Device #0: Vivante GC7000 rev 6204
+Video:    /dev/video0 nxp,imx8mm-vpu-g1-dec
+Video:    /dev/video1 nxp,imx8mq-vpu-g2-dec
+Video:    /dev/video2 nxp,imx8mp-vpu-vc8000e-enc
+Video:    /dev/video3 mxc_isi.0.capture
+Video:    /dev/video4 mxc_isi.1.capture
+Video:    /dev/video5 mxc_isi.m2m
+NPU:      Teflon delegate /opt/mesa/lib/libteflon.so
+Display:  card1-HDMI-A-1</pre>
+
+  <h3>Check Everything: <code>tz-demo check</code></h3>
+  <p>Runs each test in turn, in about 4 minutes, and ends with a table. Every line must say PASS. With HDMI connected, the GPU test and the video playback show on the screen. Without a display, the GPU line is an off-screen rendering test and there is no <code>play</code> line.</p>
+<pre>==================== summary ====================
+gpu            <span class="ok">PASS</span>   glmark2 score 148 on card1-HDMI-A-1
+opencl         <span class="ok">PASS</span>   15.77 GFLOPS, 6.74 GB/s (float4)
+npu-classify   <span class="ok">PASS</span>   2.62 ms on the NPU, x13.7 faster than the CPU, top-1 same as the CPU
+npu-detect     <span class="ok">PASS</span>   12.02 ms on the NPU, 2/2 CPU objects found by the NPU
+decode-h264    <span class="ok">PASS</span>   300 of 300 frames, 185.9 fps (1080p)
+decode-hevc    <span class="ok">PASS</span>   300 of 300 frames, 418.0 fps (1080p)
+encode         <span class="ok">PASS</span>   HEVC -> H.264 1080p at 222.0 fps, 9.5 Mbit/s, decodes back
+isi            <span class="ok">PASS</span>   YUY2 1080p -> NV12 720p, 300 of 300 frames at 132.2 fps
+play           <span class="ok">PASS</span>   295 frames shown in 10.0 s, 0 dropped, on the display through the GPU
+kernel         <span class="ok">PASS</span>   no GPU hang, no video or kernel errors</pre>
+</section>
+
+<section class="keep">
+  <h3>Everything at Once: <code>tz-demo all</code></h3>
+  <p>Runs all units together for 60 seconds (<code>tz-demo all 300</code> for five minutes), then checks the kernel log for GPU hangs and video errors:</p>
+  <ul>
+    <li>a camera-like 1080p30 chain: a live YUY2 source goes through the ISI to NV12, the VC8000E encodes it to H.264, the G1 decodes it and the GPU shows it on the display;</li>
+    <li>HEVC 1080p decoding on the G2, clip after clip, as fast as it goes;</li>
+    <li>image classification on the NPU, every result checked against the CPU;</li>
+    <li>OpenCL memory kernels on the GPU (clpeak).</li>
+  </ul>
+<pre>Running everything at once for 60 s (video to card1-HDMI-A-1)
+==================== summary ====================
+camera-chain   <span class="ok">PASS</span>   1800 of 1800 frames at 21.3 fps, 0 dropped (ISI, encoder, decoder, glimagesink)
+hevc-decode    <span class="ok">PASS</span>   19500 frames in 65 runs, 325 fps on average
+npu-loop       <span class="ok">PASS</span>   7257 inferences, 121 per second, 7257/7257 same top-1 as the CPU
+opencl         <span class="ok">PASS</span>   1 clpeak runs, last 1.21 GB/s (float4)
+kernel         <span class="ok">PASS</span>   no GPU hang, no video or kernel errors</pre>
+  <p class="note">On HDMI the chain runs at about 21 fps while OpenCL shares the GPU: the GPU runs one job at a time, so the display waits for the OpenCL kernels. Without a display the chain keeps 30 fps.</p>
+</section>
+
+<section>
+  <h3>One Unit at a Time</h3>
+  <table>
+    <thead><tr><th style="width:24%">Command</th><th>What it shows</th></tr></thead>
+    <tbody>
+      <tr><td><code>tz-demo gpu</code></td><td>glmark2, the OpenGL ES 2.0 benchmark, full screen on HDMI for about 6 minutes, with a score at the end. Without a display: off-screen OpenGL ES rendering</td></tr>
+      <tr><td><code>tz-demo cube</code></td><td>kmscube, a spinning textured cube, on the display until Ctrl-C</td></tr>
+      <tr><td><code>tz-demo opencl</code></td><td>The OpenCL device and clpeak's compute and memory figures</td></tr>
+      <tr><td><code>tz-demo npu</code></td><td>MobileNet V1 classification and SSD MobileNet V2 detection of a test picture, on the CPU and on the NPU</td></tr>
+      <tr><td><code>tz-demo decode</code></td><td>H.264 and HEVC 1080p decoding, as fast as it goes</td></tr>
+      <tr><td><code>tz-demo encode</code></td><td>HEVC to H.264 1080p transcoding, then the result decoded back</td></tr>
+      <tr><td><code>tz-demo isi</code></td><td>1080p YUY2 to 720p NV12 on the ISI</td></tr>
+      <tr><td><code>tz-demo play [FILE]</code></td><td>Plays a video file on the display through the GPU; mount the file into the container with <code>-v</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="page">
+  <div class="keep">
+    <p><code>tz-demo npu</code> prints:</p>
+<pre>MobileNet V1 on grace_hopper.bmp
+  CPU:  36.03 ms   military uniform 0.86, mortarboard 0.03, Windsor tie 0.02
+  NPU:   2.62 ms   military uniform 0.87, mortarboard 0.03, Windsor tie 0.02
+RESULT npu-classify <span class="ok">PASS</span> 2.62 ms on the NPU, x13.7 faster than the CPU, top-1 same as the CPU
+
+SSD MobileNet V2 on grace_hopper.bmp, score >= 0.5
+  CPU:  58.79 ms   tie 0.77, person 0.77
+  NPU:  12.02 ms   tie 0.80, person 0.77
+RESULT npu-detect <span class="ok">PASS</span> 12.02 ms on the NPU, 2/2 CPU objects found by the NPU</pre>
+  </div>
+
+  <h3>Figures of This Release</h3>
+  <table>
+    <thead><tr><th style="width:14%">Unit</th><th>Test</th><th class="num" style="width:30%">Result</th></tr></thead>
+    <tbody>
+      <tr><td>GPU</td><td>glmark2 full run, 1920&times;1080 on HDMI</td><td class="num">score 119</td></tr>
+      <tr><td>OpenCL</td><td>clpeak single precision / global memory (float4)</td><td class="num">15.8 GFLOPS / 6.7 GB/s</td></tr>
+      <tr><td>NPU</td><td>MobileNet V1 / SSD MobileNet V2, per picture</td><td class="num">2.6 / 12.0 ms (CPU 36 / 59 ms)</td></tr>
+      <tr><td>Decoders</td><td>1080p H.264 / HEVC</td><td class="num">186 / 418 fps</td></tr>
+      <tr><td>Encoder</td><td>1080p H.264 from the test clip (camera video: 130 to 138 fps)</td><td class="num">222 fps</td></tr>
+      <tr><td>ISI</td><td>1080p YUY2 to 720p NV12</td><td class="num">132 fps</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Verdin iMX8M Plus Quad 4GB. The test clips are a generated test pattern; camera video is harder to encode, so expect the lower figure for it.</p>
+
+  <div class="sechead" style="margin-top:3mm"><div class="eyebrow">Develop</div><h2><span class="step">5</span>Use the Stack in Your Own Container</h2></div>
+  <p>Start from the base container. Its environment already selects the upstream Mesa and GStreamer, turns on compute and sets the NPU options. Run it with <code>--privileged -v /dev:/dev -v /run/udev:/run/udev:ro</code>, as above. It has no Python and no TensorFlow Lite runtime; the demo Dockerfile in <code>containers/tz-upstream-imx8mp-demo</code> shows how to add them.</p>
+<pre>FROM samnite/tz-upstream-imx8mp:3</pre>
+  <div class="keep">
+    <p><strong>Play a video on HDMI.</strong> Decoders write padded frames. Sinks that take them as they are (<code>glimagesink</code>, <code>waylandsink</code>, <code>kmssink</code>, <code>fakevideosink</code>) are fast; a plain <code>fakesink</code> or an <code>appsink</code> without video meta makes the decoder copy each frame with the CPU, at 20 to 50 fps for 1080p.</p>
+<pre>gst-launch-1.0 filesrc location=video.mp4 ! qtdemux ! h264parse ! v4l2slh264dec ! glimagesink</pre>
+  </div>
+  <div class="keep">
+    <p><strong>Encode 1080p H.264 from a YUY2 source through the ISI.</strong> With <code>capture-io-mode=dmabuf-import</code> the ISI writes straight into the encoder's buffers; without it every frame is copied and a live 1080p30 source cannot keep up.</p>
+<pre>gst-launch-1.0 &lt;source&gt; ! video/x-raw,format=YUY2,width=1920,height=1080 ! \
+    v4l2convert capture-io-mode=dmabuf-import ! video/x-raw,format=NV12 ! \
+    v4l2slh264enc rate-control=cbr bitrate=8000000 ! h264parse ! matroskamux ! filesink location=out.mkv</pre>
+  </div>
+  <div class="keep">
+    <p><strong>Run a TensorFlow Lite model on the NPU</strong>, in Python with <code>ai-edge-litert</code>. The NPU runs quantized (int8 and uint8) models; operations it does not support stay on the CPU. The first inference compiles the model for the NPU and takes up to a second.</p>
+<pre>from ai_edge_litert.interpreter import Interpreter, load_delegate
+
+npu = load_delegate("/opt/mesa/lib/libteflon.so")
+interpreter = Interpreter("model.tflite", experimental_delegates=[npu])</pre>
+  </div>
+  <p><strong>OpenCL.</strong> <code>clinfo</code> lists the device "Vivante GC7000 rev 6204" on the rusticl platform. OpenCL applications and OpenCV's OpenCL path work without changes.</p>
+</section>
+
+<section>
+  <div class="sechead" style="margin-top:2mm"><div class="eyebrow">Limits</div><h2>Known Limits</h2></div>
+  <ul>
+    <li>The GPU runs one job at a time and cannot preempt it. Long OpenCL kernels hold it and the display waits: with clpeak's compute test running, a 30 fps video on HDMI drops to about 5 fps.</li>
+    <li>The kernel stops any single GPU draw longer than 500 ms. Qt Quick 3D's runtime light-probe filtering and some Godot scenes hit it; bake light probes offline. OpenCL is not affected: Mesa splits long launches.</li>
+    <li>glmark2 needs <code>--visual-config alpha=0</code> on this display (<code>tz-demo gpu</code> sets it): the display controller does not scan out frame buffers with alpha.</li>
+    <li>No Vulkan. No HEVC encoding: the hardware has it, but there is no kernel interface for it yet.</li>
+    <li>OpenCL reports the embedded profile; NXP reports the full profile.</li>
+    <li>The container is Debian sid, not the trixie base of Torizon's own containers.</li>
+    <li><code>systemd-networkd-wait-online</code> reports a failure at boot; the network works.</li>
+  </ul>
+</section>
+
+<section class="keep">
+  <div class="sechead" style="margin-top:2mm"><div class="eyebrow">Sources</div><h2>Sources and Links</h2></div>
+  <table>
+    <thead><tr><th style="width:18%">Part</th><th>Repository and branch</th><th class="num" style="width:16%">Commit</th></tr></thead>
+    <tbody>
+      <tr><td>Yocto layer</td><td>github.com/EstebanSannin/meta-tz-mainline, <code>tz-upstream/imx8mp</code></td><td class="num">release tag</td></tr>
+      <tr><td>Linux</td><td>github.com/EstebanSannin/linux, <code>tz-upstream/imx8mp</code></td><td class="num"><code>3a11102d65</code></td></tr>
+      <tr><td>Mesa</td><td>github.com/EstebanSannin/mesa, <code>tz-upstream/imx8mp</code></td><td class="num"><code>4ddbea6679</code></td></tr>
+      <tr><td>GStreamer</td><td>github.com/EstebanSannin/gstreamer, <code>tz-upstream/imx8mp</code></td><td class="num"><code>feabad2506</code></td></tr>
+      <tr><td>libclc</td><td>gitlab.freedesktop.org/karolherbst/mesa-libclc, tag 22.1.8.3</td><td class="num"><code>87f6600724</code></td></tr>
+      <tr><td>Containers</td><td>hub.docker.com: <code>samnite/tz-upstream-imx8mp:3</code>, <code>samnite/tz-upstream-imx8mp-demo:1</code></td><td class="num">&ndash;</td></tr>
+    </tbody>
+  </table>
+  <p class="note">The layer's README has the full release notes and test results.</p>
+</section>
+
+</main>
+</body>
+</html>
