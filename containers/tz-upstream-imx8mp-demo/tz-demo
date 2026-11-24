@@ -1,0 +1,264 @@
+#!/bin/bash
+# tz-demo: show and check the GPU, OpenCL, NPU and video hardware of Verdin iMX8MP on the upstream stack.
+# Run it in the tz-upstream-imx8mp-demo container with --privileged -v /dev:/dev -v /run/udev:/run/udev:ro.
+
+D=/opt/demo
+CLIPS=$D/clips
+PY=$D/venv/bin/python3
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+
+# 1080p YUY2 sources: a black frame costs the CPU nothing (for speed tests); scrolling colour bars look
+# like a camera picture and the CPU makes them at about 60 fps.
+BLACK="videotestsrc pattern=black"
+BARS="videotestsrc pattern=smpte horizontal-speed=8"
+YUY2="video/x-raw,format=YUY2,width=1920,height=1080,framerate=30/1"
+
+usage() {
+	cat <<'EOF'
+Usage: tz-demo COMMAND
+
+  info          what the system reports: kernel, GPU, NPU, OpenGL ES, OpenCL, video devices, display
+  check         run the tests below one after another and print a PASS/FAIL table (about 3 minutes)
+  all [SECONDS] everything at the same time for SECONDS (default 60): a camera-like 1080p30 chain
+                (ISI -> H.264 encoder -> H.264 decoder -> GPU on the display), HEVC decoding, NPU
+                classification and OpenCL compute; then a PASS/FAIL table
+
+  gpu [ARGS]    OpenGL ES: glmark2 on the display (about 6 minutes; ARGS go to glmark2), or a headless
+                rendering test without a display
+  cube          kmscube on the display until Ctrl-C
+  opencl        OpenCL: the device and clpeak's compute and memory figures
+  npu           NPU: image classification and object detection, compared with the CPU
+  decode        hardware decoding of 1080p H.264 and HEVC, as fast as it goes
+  encode        hardware H.264 encoding of 1080p (the decoded HEVC clip as input), decoded back
+  isi           ISI colour conversion and scaling (v4l2convert)
+  play [FILE]   play a video on the display through the GPU (default: the HEVC test clip)
+
+Every test prints one line "RESULT <name> PASS|FAIL <figures>".
+EOF
+}
+
+result() { printf 'RESULT %s %s %s\n' "$1" "$2" "$3"; }
+
+display_connector() {
+	local s
+	for s in /sys/class/drm/card*-*/status; do
+		[ "$(cat "$s" 2>/dev/null)" = connected ] && { basename "$(dirname "$s")"; return 0; }
+	done
+	return 1
+}
+
+kernel_mark() { dmesg | wc -l; }
+kernel_errors() {
+	dmesg | tail -n +"$(( $1 + 1 ))" |
+		grep -iE 'etnaviv.*(hang|recover|timeout|fault)|hantro.*(error|timeout)|vc8000.*(error|timeout)|isi.*error|WARNING:|BUG:|Oops'
+}
+
+# gst_stats PIPELINE...: run a pipeline that has "identity name=count silent=false" in it.
+# Prints "frames seconds fps dropped" (dropped: from an fpsdisplaysink, 0 without one).
+gst_stats() {
+	local log
+	log=$(mktemp -p "$TMP")
+	gst-launch-1.0 -v "$@" > "$log" 2>&1
+	awk '/GstIdentity:count: last-message = chain/ {n++}
+	     /Execution ended after/ {split($4, a, ":"); t = a[1] * 3600 + a[2] * 60 + a[3]}
+	     match($0, /dropped: [0-9]+/) {d = substr($0, RSTART + 9, RLENGTH - 9)}
+	     END {printf "%d %.2f %.1f %d\n", n, t, (t > 0 ? n / t : 0), d}' "$log"
+}
+
+COUNT="identity name=count silent=false"
+# fakevideosink takes padded frames as they are; fakesink would make the decoders copy every frame
+FAST_SINK="fakevideosink sync=false"
+
+cmd_info() {
+	echo "Kernel:   $(uname -r)"
+	echo "Mesa:     $(cut -c1-12 /opt/mesa/MESA_COMMIT 2>/dev/null), GStreamer: $(cut -c1-12 /opt/gst/GST_COMMIT 2>/dev/null)"
+	for n in /sys/class/drm/renderD*; do
+		echo "DRM:      /dev/dri/$(basename "$n") $(basename "$(readlink -f "$n/device/driver")")"
+	done
+	eglinfo.aarch64-linux-gnu -B -p surfaceless 2>/dev/null | grep -E '^OpenGL ES profile (renderer|version)' |
+		sed 's/^OpenGL ES profile /OpenGL:   /'
+	clinfo -l 2>/dev/null | sed 's/^/OpenCL:   /'
+	for v in /sys/class/video4linux/video*; do
+		echo "Video:    /dev/$(basename "$v") $(cat "$v/name")"
+	done
+	[ -e /opt/mesa/lib/libteflon.so ] && echo "NPU:      Teflon delegate /opt/mesa/lib/libteflon.so"
+	echo "Display:  $(display_connector || echo 'none connected')"
+}
+
+cmd_gpu() {
+	local c score
+	if c=$(display_connector); then
+		[ $# -eq 0 ] && echo "glmark2 on $c (about 6 minutes; Ctrl-C to stop)"
+		# no alpha: the display controller does not scan out ARGB frame buffers
+		glmark2-es2-drm --visual-config alpha=0 "$@" | tee "$TMP/glmark2"
+		score=$(awk '/glmark2 Score:/ {print $3}' "$TMP/glmark2")
+		if [ -n "$score" ] && ! grep -q 'Failed' "$TMP/glmark2"; then
+			result gpu PASS "glmark2 score $score on $c"
+		else
+			result gpu FAIL "glmark2 did not finish cleanly"
+		fi
+	else
+		echo "No display: rendering 1080p OpenGL ES off screen"
+		set -- $(gst_stats gltestsrc num-buffers=600 pattern=mandelbrot ! \
+			"video/x-raw(memory:GLMemory),width=1920,height=1080" ! $COUNT ! $FAST_SINK)
+		[ "$1" -eq 600 ] && result gpu PASS "$3 fps rendering 1080p off screen" ||
+			result gpu FAIL "off-screen rendering failed ($1 of 600 frames)"
+	fi
+}
+
+cmd_cube() {
+	local c
+	c=$(display_connector) || { echo "No display connected"; return 1; }
+	kmscube -D "/dev/dri/${c%%-*}"
+}
+
+cmd_opencl() {
+	local n gflops gbps
+	clinfo -l
+	n=$(clinfo -l 2>/dev/null | grep -c Device)
+	clpeak --compute-sp --global-bandwidth | tee "$TMP/clpeak"
+	gbps=$(awk -F': *' '/Global memory bandwidth/ {s = 1} s && /float4/ {print $2; exit}' "$TMP/clpeak")
+	gflops=$(awk -F': *' '/Single-precision compute/ {s = 1} s && /float4/ {print $2; exit}' "$TMP/clpeak")
+	[ "$n" -ge 1 ] && [ -n "$gflops" ] && result opencl PASS "$gflops GFLOPS, $gbps GB/s (float4)" ||
+		result opencl FAIL "no OpenCL device or clpeak failed"
+}
+
+cmd_npu() {
+	$PY $D/npu.py classify
+	echo
+	$PY $D/npu.py detect
+}
+
+decode_one() { # decode_one NAME FILE PARSER DECODER
+	set -- "$1" $(gst_stats filesrc location="$2" ! qtdemux ! "$3" ! "$4" ! $COUNT ! $FAST_SINK)
+	result "$1" "$([ "$2" -eq 300 ] && echo PASS || echo FAIL)" "$2 of 300 frames, $4 fps (1080p)"
+}
+
+cmd_decode() {
+	decode_one decode-h264 $CLIPS/h264-1080p30.mp4 h264parse v4l2slh264dec
+	decode_one decode-hevc $CLIPS/hevc-1080p30.mp4 h265parse v4l2slh265dec
+}
+
+cmd_encode() {
+	local size
+	set -- $(gst_stats filesrc location=$CLIPS/hevc-1080p30.mp4 ! qtdemux ! h265parse ! v4l2slh265dec ! \
+		v4l2slh264enc rate-control=cbr bitrate=8000000 ! h264parse ! $COUNT ! matroskamux ! \
+		filesink location="$TMP/enc.mkv")
+	size=$(stat -c %s "$TMP/enc.mkv" 2>/dev/null || echo 0)
+	local enc=$1 fps=$3
+	set -- $(gst_stats filesrc location="$TMP/enc.mkv" ! matroskademux ! h264parse ! v4l2slh264dec ! $COUNT ! $FAST_SINK)
+	if [ "$enc" -eq 300 ] && [ "$1" -eq 300 ]; then
+		result encode PASS "HEVC -> H.264 1080p at $fps fps, $(awk -v s="$size" 'BEGIN {printf "%.1f", s * 8 / 10 / 1e6}') Mbit/s, decodes back"
+	else
+		result encode FAIL "$enc of 300 frames encoded, $1 decoded back"
+	fi
+}
+
+cmd_isi() {
+	set -- $(gst_stats $BLACK num-buffers=300 ! $YUY2 ! v4l2convert ! video/x-raw,format=NV12,width=1280,height=720 ! \
+		$COUNT ! $FAST_SINK)
+	result isi "$([ "$1" -eq 300 ] && echo PASS || echo FAIL)" "YUY2 1080p -> NV12 720p, $1 of 300 frames at $3 fps"
+}
+
+cmd_play() {
+	local f=${1:-$CLIPS/hevc-1080p30.mp4}
+	display_connector > /dev/null || { echo "No display connected"; return 1; }
+	# fpsdisplaysink reports twice a second, so "shown" can miss the last few frames
+	set -- $(gst-launch-1.0 -v playbin3 uri="file://$(readlink -f "$f")" flags=video \
+		video-sink="fpsdisplaysink video-sink=glimagesink text-overlay=false" 2>&1 |
+		grep -oE 'rendered: [0-9]+, dropped: [0-9]+|Execution ended after [0-9:.]+' |
+		awk '/rendered/ {r = $2 + 0; d = $4} /Execution/ {split($4, a, ":"); t = a[1] * 3600 + a[2] * 60 + a[3]}
+		     END {printf "%d %d %.1f\n", r, d, t}')
+	result play "$([ "${1:-0}" -gt 0 ] && [ "${2:-1}" -eq 0 ] && echo PASS || echo FAIL)" \
+		"${1:-0} frames shown in ${3:-0} s, ${2:-?} dropped, on the display through the GPU"
+}
+
+cmd_check() {
+	local mark
+	mark=$(kernel_mark)
+	cmd_info
+	echo
+	{
+		cmd_gpu -b build -b texture -b shading:shading=phong -b bump:bump-render=normals -b effect2d \
+			-b pulsar -b desktop -b conditionals -b function -b loop
+		cmd_opencl
+		cmd_npu
+		cmd_decode
+		cmd_encode
+		cmd_isi
+		display_connector > /dev/null && cmd_play
+	} 2>&1 | tee "$TMP/check"
+	summary "$TMP/check" "$mark"
+}
+
+summary() {
+	local errs
+	echo
+	echo "==================== summary ===================="
+	grep '^RESULT' "$1" | cut -d' ' -f2- | awk '{n = $1; s = $2; $1 = $2 = ""; printf "%-14s %-5s%s\n", n, s, $0}'
+	errs=$(kernel_errors "$2")
+	if [ -n "$errs" ]; then
+		echo "$errs" | head -5
+		printf '%-14s %-5s %s\n' kernel FAIL "$(echo "$errs" | wc -l) new error lines in the kernel log"
+	else
+		printf '%-14s %-5s %s\n' kernel PASS "no GPU hang, no video or kernel errors"
+	fi
+	! grep -q '^RESULT [^ ]* FAIL' "$1" && [ -z "$errs" ]
+}
+
+cmd_all() {
+	local secs=${1:-60} mark sink c
+	mark=$(kernel_mark)
+	if c=$(display_connector); then sink=glimagesink; else sink=fakevideosink; fi
+	echo "Running everything at once for $secs s (video to ${c:-no display})"
+
+	# Camera-like chain: live YUY2 source -> ISI -> H.264 encoder -> H.264 decoder -> GPU, at 30 fps.
+	# The ISI writes into the encoder's buffers (dmabuf-import, no copy). The live source sets the pace,
+	# so the sink shows each frame when it comes (sync=false) instead of dropping it for the codec latency.
+	(
+		n=$(( secs * 30 ))
+		set -- $(gst_stats $BARS is-live=true num-buffers=$n ! $YUY2 ! v4l2convert capture-io-mode=dmabuf-import ! \
+			video/x-raw,format=NV12 ! v4l2slh264enc rate-control=cbr bitrate=8000000 ! h264parse ! v4l2slh264dec ! \
+			$COUNT ! fpsdisplaysink video-sink=$sink text-overlay=false sync=false)
+		ok=FAIL; [ "$1" -eq "$n" ] && [ "$4" -eq 0 ] && ok=PASS
+		result camera-chain $ok "$1 of $n frames at $3 fps, $4 dropped (ISI, encoder, decoder, $sink)"
+	) > "$TMP/chain" &
+
+	# HEVC decoding as fast as it goes, clip after clip
+	(
+		end=$(( $(date +%s) + secs )); frames=0; runs=0
+		while [ "$(date +%s)" -lt "$end" ]; do
+			set -- $(gst_stats filesrc location=$CLIPS/hevc-1080p30.mp4 ! qtdemux ! h265parse ! v4l2slh265dec ! \
+				$COUNT ! $FAST_SINK)
+			frames=$(( frames + $1 )); runs=$(( runs + 1 ))
+		done
+		result hevc-decode "$([ "$frames" -eq $(( runs * 300 )) ] && echo PASS || echo FAIL)" \
+			"$frames frames in $runs runs, $(( frames / secs )) fps on average"
+	) > "$TMP/hevc" &
+
+	# NPU classification, every result checked against the CPU
+	$PY $D/npu.py loop "$secs" > "$TMP/npu" 2>&1 &
+
+	# OpenCL memory kernels, run after run. They share the GPU with the display; long compute kernels
+	# (clpeak --compute-sp) would hold it for whole seconds, since the GPU cannot preempt a job.
+	(
+		end=$(( $(date +%s) + secs )); runs=0; g=""
+		while [ "$(date +%s)" -lt "$end" ]; do
+			g=$(clpeak --global-bandwidth 2>/dev/null | awk -F': *' '/float4/ {print $2; exit}')
+			[ -n "$g" ] && runs=$(( runs + 1 ))
+		done
+		result opencl "$([ "$runs" -gt 0 ] && echo PASS || echo FAIL)" "$runs clpeak runs, last ${g:-?} GB/s (float4)"
+	) > "$TMP/cl" &
+
+	wait
+	cat "$TMP/chain" "$TMP/hevc" "$TMP/npu" "$TMP/cl" > "$TMP/all"
+	summary "$TMP/all" "$mark"
+}
+
+cmd=${1:-help}
+shift
+case $cmd in
+	info | gpu | cube | opencl | npu | decode | encode | isi | play | check | all) "cmd_$cmd" "$@" ;;
+	*) usage ;;
+esac

@@ -14,7 +14,7 @@ changes. For evaluation, not for products.
 - U-Boot pinned to v2026.10 (2027.01-rc1 hangs in SPL on this board).
 - GPU hang check: stock 500 ms (see Known limits).
 
-**Container** `tz-upstream-imx8mp:2` (`containers/tz-upstream-imx8mp/Dockerfile`, arm64, built on Debian sid snapshot
+**Container** `tz-upstream-imx8mp:3` (`containers/tz-upstream-imx8mp/Dockerfile`, arm64, built on Debian sid snapshot
 20261115T000000Z: LLVM 22.1.8, SPIRV-LLVM-Translator 22.1.0, the toolchain the OpenCL work was validated with):
 
 - Mesa in `/opt/mesa`: etnaviv with OpenGL ES 3.1, OpenCL 3.0 embedded profile (with 64-bit integers, half
@@ -27,21 +27,28 @@ changes. For evaluation, not for products.
   `RUSTICL_ENABLE=etnaviv`) and the NPU settings of the evaluation (`ETNA_*`, `TEFLON_*`). All of them are
   opt-in in this Mesa.
 
+**Demo container** `tz-upstream-imx8mp-demo:1` (`containers/tz-upstream-imx8mp-demo`): the same plus glmark2, kmscube,
+clpeak, a TensorFlow Lite runtime, two Coral models, test clips and `tz-demo`, which shows and checks each unit.
+[GETTING-STARTED.md](GETTING-STARTED.md) installs the release and runs it.
+
+Container `:3` replaces `:2`, which gave wrong NPU results: with compute on, the container's default, Teflon's jobs
+went to the GPU (Mesa commit 4ddbea6679 fixes it).
+
 ## Use
 
 Flash the Tezi image with Toradex Easy Installer, then pull the container on the board:
 
 ```
-docker pull samnite/tz-upstream-imx8mp:2
+docker pull samnite/tz-upstream-imx8mp:3
 ```
 
-or load it from the release archive with `docker load -i tz-upstream-imx8mp-2.tar.gz` (the image is then
-named `tz-upstream-imx8mp:2`).
+or load it from the release archive with `docker load -i tz-upstream-imx8mp-3.tar.gz` (the image is then
+named `tz-upstream-imx8mp:3`).
 
 Run it with the devices:
 
 ```
-docker run --rm -it --privileged -v /dev:/dev -v /run/udev:/run/udev:ro samnite/tz-upstream-imx8mp:2 clinfo
+docker run --rm -it --privileged -v /dev:/dev -v /run/udev:/run/udev:ro samnite/tz-upstream-imx8mp:3 clinfo
 ```
 
 Play a video on HDMI:
@@ -74,8 +81,10 @@ On a Verdin iMX8MP with Dahlia, with the image and the container (23 November 20
 - OpenCL: Khronos CTS run inside the container, all pass with no GPU hangs: basic 431/431, images 44/44,
   half/select/geometrics/vectors 52/52, integer_ops 76/76, conversions (wimpy) 900/900 sub-tests, bruteforce (wimpy)
   92/92. clpeak and OpenCV's OpenCL path give the same figures as the development build.
-- NPU: six Coral models, every result matches the CPU. Faster than NXP's driver on all six against
+- NPU: six Coral models with the container's Mesa and environment (24 November, container `:3`), every result
+  matches the CPU. Faster than NXP's driver on all six against
   Torizon OS 8, and on five of six against 7.7.0 (SSD MobileNet V2 is 5% slower).
+- `tz-demo check` and `tz-demo all` pass with container `:3`, on HDMI and without a display (24 November).
 - Video: H.264 / HEVC 1080p decode at 209 / 402 fps. H.264 encode at 129–138 fps at 4–15 Mbit/s. Both codecs play
   on HDMI at 30 fps with no drops and an exact picture. ISI to encoder works.
 
@@ -84,6 +93,8 @@ On a Verdin iMX8MP with Dahlia, with the image and the container (23 November 20
 - The kernel's 500 ms GPU hang check stops single draws that run longer, for example Qt Quick 3D's runtime light
   probe filtering and some Godot scenes. Bake Qt light probes offline. OpenCL is not affected: Mesa splits long
   launches.
+- The GPU runs one job at a time and cannot preempt it: long OpenCL kernels hold it and the display waits. With
+  clpeak's compute test running, a 30 fps video on HDMI drops to about 5 fps.
 - No Vulkan. No HEVC encode: the hardware has it, but there is no kernel interface for it yet.
 - OpenCL reports the embedded profile; NXP reports the full profile.
 - The container is Debian sid, not the trixie base of Torizon's own containers.
@@ -95,6 +106,6 @@ On a Verdin iMX8MP with Dahlia, with the image and the container (23 November 20
 |---|---|---|
 | Yocto layer | github.com/EstebanSannin/meta-tz-mainline `tz-upstream/imx8mp` | this commit |
 | Linux | github.com/EstebanSannin/linux `tz-upstream/imx8mp` | 3a11102d65 |
-| Mesa | github.com/EstebanSannin/mesa `tz-upstream/imx8mp` | b9939148ef |
+| Mesa | github.com/EstebanSannin/mesa `tz-upstream/imx8mp` | 4ddbea6679 |
 | GStreamer | github.com/EstebanSannin/gstreamer `tz-upstream/imx8mp` | feabad2506 |
 | libclc | gitlab.freedesktop.org/karolherbst/mesa-libclc, tag 22.1.8.3 | 87f6600724 |
