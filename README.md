@@ -29,16 +29,19 @@ changes. For evaluation, not for products.
 
 ## Use
 
-Flash the Tezi image with Toradex Easy Installer, then load the container on the board:
+Flash the Tezi image with Toradex Easy Installer, then pull the container on the board:
 
 ```
-docker load -i tz-upstream-imx8mp-2.tar.gz
+docker pull samnite/tz-upstream-imx8mp:2
 ```
+
+or load it from the release archive with `docker load -i tz-upstream-imx8mp-2.tar.gz` (the image is then
+named `tz-upstream-imx8mp:2`).
 
 Run it with the devices:
 
 ```
-docker run --rm -it --privileged -v /dev:/dev -v /run/udev:/run/udev:ro tz-upstream-imx8mp:2 clinfo
+docker run --rm -it --privileged -v /dev:/dev -v /run/udev:/run/udev:ro samnite/tz-upstream-imx8mp:2 clinfo
 ```
 
 Play a video on HDMI:
